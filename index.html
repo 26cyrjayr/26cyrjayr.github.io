@@ -18,6 +18,7 @@
     --err:       #f87171;
     --radius:    6px;
     --pixel-off: #22222a;
+    --pixel-on:  #ed1c24;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -196,7 +197,7 @@
     background: var(--pixel-off);
     border: 1px solid rgba(0,0,0,.16);
   }
-  .cell.on { background: var(--accent); }
+  .cell.on { background: var(--pixel-on); }
 
   #progress-wrap {
     display: none;
@@ -294,6 +295,10 @@
       <button class="btn-secondary" id="tool-erase">Erase</button>
       <button class="btn-secondary" id="btn-clear-grid">Clear</button>
       <button class="btn-secondary" id="btn-invert-grid">Invert</button>
+      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;">
+        Color
+        <input type="color" id="draw-color" value="#ed1c24" style="width:30px;height:24px;border:none;background:transparent;padding:0;">
+      </label>
       <button class="btn-primary" id="btn-convert-grid">Use Drawing (8×64)</button>
       <span class="tool-chip" id="tool-state">Mode: Draw · 8×64 locked</span>
     </div>
@@ -355,11 +360,13 @@
   const btnClearGrid = document.getElementById('btn-clear-grid');
   const btnInvertGrid = document.getElementById('btn-invert-grid');
   const btnConvertGrid = document.getElementById('btn-convert-grid');
+  const drawColorInput = document.getElementById('draw-color');
 
   let generatedCode = '';
   let sourceFileName = '';
   let drawMode = 'draw';
   let isPointerDown = false;
+  let drawColor = hexToRgb(drawColorInput.value);
   const gridPixels = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(0));
 
   btnBrowse.addEventListener('click', () => fileInput.click());
@@ -408,6 +415,11 @@
   btnConvertGrid.addEventListener('click', () => {
     convertDrawing();
   });
+  drawColorInput.addEventListener('input', () => {
+    drawColor = hexToRgb(drawColorInput.value);
+    document.documentElement.style.setProperty('--pixel-on', drawColorInput.value);
+    setStatus(`Drawing color set to ${drawColorInput.value}.`, 'ok');
+  });
 
   document.addEventListener('pointerup', () => {
     isPointerDown = false;
@@ -415,6 +427,7 @@
 
   initPixelGrid();
   setTool('draw');
+  document.documentElement.style.setProperty('--pixel-on', drawColorInput.value);
 
   function handleFile(file) {
     setStatus('');
@@ -462,10 +475,9 @@
       for (let col = 0; col < GRID_W; col++) {
         const idx = (row * GRID_W + col) * 4;
         const on = gridPixels[row][col] === 1;
-        const value = on ? 255 : 0;
-        imageData.data[idx] = value;
-        imageData.data[idx + 1] = value;
-        imageData.data[idx + 2] = value;
+        imageData.data[idx] = on ? drawColor.r : 0;
+        imageData.data[idx + 1] = on ? drawColor.g : 0;
+        imageData.data[idx + 2] = on ? drawColor.b : 0;
         imageData.data[idx + 3] = 255;
       }
     }
@@ -487,26 +499,20 @@
     const CHUNK = 20;
     const data = imageData.data;
     const parts = [];
-
-    parts.push(`static const struct PROGMEM {\n`);
-    parts.push(`  unsigned int width;\n`);
-    parts.push(`  unsigned int height;\n`);
-    parts.push(`  unsigned int bytes_per_pixel;\n`);
-    parts.push(`  unsigned char pixels[${W} * ${H} * 3];\n`);
-    parts.push(`} image = {${W},${H},3,\n`);
+    parts.push(`  `);
 
     let row = 0;
 
     function processChunk() {
       const end = Math.min(row + CHUNK, H);
       for (; row < end; row++) {
-        let line = '\n';
+        let line = '\n  ';
         for (let col = 0; col < W; col++) {
           const idx = (row * W + col) * 4;
           const r = data[idx];
           const g = data[idx + 1];
           const b = data[idx + 2];
-          line += `${r.toString().padStart(3)},${g.toString().padStart(3)},${b.toString().padStart(3)}, `;
+          line += `${r.toString().padStart(3)}, ${g.toString().padStart(3)}, ${b.toString().padStart(3)}, `;
         }
         parts.push(line);
       }
@@ -518,17 +524,16 @@
       if (row < H) {
         setTimeout(processChunk, 0);
       } else {
-        finalise(parts, fileName);
+        finalise(parts, fileName, W, H);
       }
     }
 
     setTimeout(processChunk, 0);
   }
 
-  function finalise(parts, fileName) {
-    let code = parts.join('');
-    code = code.replace(/,\s*$/, '');
-    code += '\n};\n';
+  function finalise(parts, fileName, width, height) {
+    const pixelRows = parts.join('').replace(/,\s*$/, '');
+    const code = buildSketchCode(width, height, pixelRows);
 
     generatedCode = code;
     codeOutput.value = code;
@@ -625,6 +630,153 @@
     btnBrowse.disabled = false;
     btnConvertGrid.disabled = false;
     progressWrap.classList.remove('visible');
+  }
+
+  function buildSketchCode(width, height, pixelRows) {
+    return `#include <avr/pgmspace.h>
+
+static const struct PROGMEM {
+  int width;
+  int height;
+  int bytes_per_pixel;
+  const byte pixels[${width} * ${height} * 3];
+} image = { ${width}, ${height}, 3,
+${pixelRows}
+};
+
+// ================= PINS =================
+#define RED_PIN    8
+#define GREEN_PIN  9
+#define BLUE_PIN   10
+#define HALL_PIN   2
+
+#define NUM_LEDS   8
+const int commonPins[NUM_LEDS] = {0, 1, A1, 3, 4, 5, 6, 7};
+
+#define TOTAL_COLS ${width}
+#define POV_MIN_RPM 30
+
+// ================= PATTERN =================
+byte patternR[TOTAL_COLS][NUM_LEDS];
+byte patternG[TOTAL_COLS][NUM_LEDS];
+byte patternB[TOTAL_COLS][NUM_LEDS];
+
+void buildPatternFromImage() {
+  for (int col = 0; col < TOTAL_COLS; col++) {
+    for (int row = 0; row < NUM_LEDS; row++) {
+      int idx = (row * image.width + col) * image.bytes_per_pixel;
+      patternR[col][row] = pgm_read_byte(&image.pixels[idx]);
+      patternG[col][row] = pgm_read_byte(&image.pixels[idx + 1]);
+      patternB[col][row] = pgm_read_byte(&image.pixels[idx + 2]);
+    }
+  }
+}
+
+// ================= RPM / SYNC =================
+volatile unsigned long lastPulseTime = 0;
+volatile unsigned long periodMicros  = 0;
+volatile int currentCol = 0;
+
+#define MIN_PERIOD_US 5000UL
+#define STALE_TIMEOUT 2000000UL
+
+void hallISR() {
+  unsigned long now = micros();
+  unsigned long dt  = now - lastPulseTime;
+
+  if (dt > MIN_PERIOD_US) {
+    periodMicros  = dt;
+    lastPulseTime = now;
+    currentCol = 0;  // HARD SYNC TO ROTATION
+  }
+}
+
+// ================= HELPERS =================
+void allOff() {
+  for (int i = 0; i < NUM_LEDS; i++) digitalWrite(commonPins[i], HIGH);
+  analogWrite(RED_PIN,   0);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN,  0);
+}
+
+void drawColumn(int col) {
+  for (int led = 0; led < NUM_LEDS; led++) {
+    byte r = patternR[col][led];
+    byte g = patternG[col][led];
+    byte b = patternB[col][led];
+
+    if (r || g || b) {
+      allOff();
+      digitalWrite(commonPins[led], LOW);
+      analogWrite(RED_PIN,   r);
+      analogWrite(GREEN_PIN, g);
+      analogWrite(BLUE_PIN,  b);
+      delayMicroseconds(60);
+    }
+  }
+  allOff();
+}
+
+// ================= SETUP =================
+void setup() {
+  pinMode(RED_PIN,   OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN,  OUTPUT);
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    pinMode(commonPins[i], OUTPUT);
+    digitalWrite(commonPins[i], HIGH);
+  }
+
+  pinMode(HALL_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(HALL_PIN), hallISR, RISING);
+
+  buildPatternFromImage();
+}
+
+// ================= LOOP =================
+void loop() {
+  unsigned long period;
+  unsigned long lastPulse;
+
+  noInterrupts();
+  period    = periodMicros;
+  lastPulse = lastPulseTime;
+  interrupts();
+
+  bool stalled = (period == 0) || ((micros() - lastPulse) > STALE_TIMEOUT);
+  float rpm = stalled ? 0 : 60000000.0f / (float)period;
+
+  if (stalled || rpm < POV_MIN_RPM) {
+    allOff();
+    return;
+  }
+
+  unsigned long dwellUs = period / TOTAL_COLS;
+  if (dwellUs < 50) dwellUs = 50;
+
+  int col;
+  noInterrupts();
+  col = currentCol;
+  interrupts();
+
+  drawColumn(col);
+  delayMicroseconds(dwellUs);
+
+  noInterrupts();
+  currentCol = (currentCol + 1) % TOTAL_COLS;
+  interrupts();
+}
+`;
+  }
+
+  function hexToRgb(hex) {
+    const safeHex = (hex || '#ffffff').replace('#', '');
+    return {
+      r: parseInt(safeHex.substring(0, 2), 16),
+      g: parseInt(safeHex.substring(2, 4), 16),
+      b: parseInt(safeHex.substring(4, 6), 16)
+    };
   }
 })();
 </script>
