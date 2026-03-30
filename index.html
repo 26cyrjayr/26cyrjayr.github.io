@@ -17,6 +17,7 @@
     --muted:     #71717a;
     --err:       #f87171;
     --radius:    6px;
+    --pixel-off: #22222a;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +34,6 @@
     padding: 32px 16px 48px;
   }
 
-  /* ── Header ── */
   header {
     width: 100%;
     max-width: 860px;
@@ -57,7 +57,6 @@
     color: var(--muted);
   }
 
-  /* ── Main card ── */
   .card {
     width: 100%;
     max-width: 860px;
@@ -70,7 +69,6 @@
     gap: 20px;
   }
 
-  /* ── Row ── */
   .row {
     display: flex;
     align-items: center;
@@ -86,7 +84,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Text inputs ── */
   input[type="text"] {
     flex: 1;
     background: var(--bg);
@@ -102,7 +99,6 @@
   input[type="text"]:focus { border-color: var(--accent); }
   input[type="text"]:read-only { color: var(--muted); cursor: default; }
 
-  /* ── Buttons ── */
   button {
     cursor: pointer;
     border: none;
@@ -110,7 +106,7 @@
     font-family: 'IBM Plex Mono', monospace;
     font-size: 13px;
     font-weight: 500;
-    padding: 8px 18px;
+    padding: 8px 14px;
     transition: background .15s, opacity .15s, transform .07s;
     white-space: nowrap;
   }
@@ -130,7 +126,6 @@
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
   .btn-secondary:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
-  /* ── Preview strip ── */
   #preview-wrap {
     display: none;
     align-items: center;
@@ -160,7 +155,49 @@
   }
   .meta strong { color: var(--text); font-weight: 500; }
 
-  /* ── Progress ── */
+  .drawing-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .drawing-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .tool-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  #pixel-grid {
+    --cell-size: 12px;
+    display: grid;
+    grid-template-columns: repeat(64, var(--cell-size));
+    gap: 1px;
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #101015;
+    user-select: none;
+  }
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    background: var(--pixel-off);
+    border: 1px solid rgba(0,0,0,.16);
+  }
+  .cell.on { background: var(--accent); }
+
   #progress-wrap {
     display: none;
     flex-direction: column;
@@ -186,7 +223,6 @@
     color: var(--muted);
   }
 
-  /* ── Code output ── */
   .code-header {
     display: flex;
     align-items: center;
@@ -215,7 +251,6 @@
     line-height: 1.6;
   }
 
-  /* ── Status message ── */
   #status {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -225,10 +260,7 @@
   #status.ok  { color: var(--accent); }
   #status.err { color: var(--err); }
 
-  /* ── Divider ── */
   hr { border: none; border-top: 1px solid var(--border); }
-
-  /* ── Hidden file input ── */
   #file-input { display: none; }
 </style>
 </head>
@@ -240,8 +272,6 @@
 </header>
 
 <div class="card">
-
-  <!-- Source image row -->
   <div class="row">
     <label>Source image</label>
     <input type="text" id="t-image" placeholder="source image file" readonly>
@@ -249,7 +279,6 @@
     <input type="file" id="file-input" accept=".jpg,.jpeg,.gif,.png,.bmp,image/*">
   </div>
 
-  <!-- Image preview + meta -->
   <div id="preview-wrap">
     <img id="img-preview" alt="preview">
     <div class="meta">
@@ -259,7 +288,18 @@
     </div>
   </div>
 
-  <!-- Conversion progress -->
+  <div class="drawing-wrap">
+    <div class="drawing-toolbar">
+      <button class="btn-secondary" id="tool-draw">Draw</button>
+      <button class="btn-secondary" id="tool-erase">Erase</button>
+      <button class="btn-secondary" id="btn-clear-grid">Clear</button>
+      <button class="btn-secondary" id="btn-invert-grid">Invert</button>
+      <button class="btn-primary" id="btn-convert-grid">Use Drawing (8×64)</button>
+      <span class="tool-chip" id="tool-state">Mode: Draw · 8×64 locked</span>
+    </div>
+    <div id="pixel-grid" aria-label="8 by 64 drawing grid"></div>
+  </div>
+
   <div id="progress-wrap">
     <div id="progress-bar-bg"><div id="progress-bar"></div></div>
     <div id="progress-label">Converting…</div>
@@ -267,7 +307,6 @@
 
   <hr>
 
-  <!-- Code output -->
   <div>
     <div class="code-header">
       <span>Generated C Code</span>
@@ -278,7 +317,6 @@
 
   <hr>
 
-  <!-- Save row -->
   <div class="row">
     <label>Output file</label>
     <input type="text" id="t-code" placeholder="dest code file" readonly>
@@ -286,11 +324,13 @@
   </div>
 
   <div id="status"></div>
-
 </div>
 
 <script>
 (() => {
+  const GRID_H = 8;
+  const GRID_W = 64;
+
   const fileInput   = document.getElementById('file-input');
   const btnBrowse   = document.getElementById('btn-browse');
   const btnSave     = document.getElementById('btn-save');
@@ -308,10 +348,20 @@
   const metaBytes   = document.getElementById('meta-bytes');
   const statusEl    = document.getElementById('status');
 
+  const pixelGridEl = document.getElementById('pixel-grid');
+  const toolDraw = document.getElementById('tool-draw');
+  const toolErase = document.getElementById('tool-erase');
+  const toolState = document.getElementById('tool-state');
+  const btnClearGrid = document.getElementById('btn-clear-grid');
+  const btnInvertGrid = document.getElementById('btn-invert-grid');
+  const btnConvertGrid = document.getElementById('btn-convert-grid');
+
   let generatedCode = '';
   let sourceFileName = '';
+  let drawMode = 'draw';
+  let isPointerDown = false;
+  const gridPixels = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(0));
 
-  // Wire browse button → hidden file input
   btnBrowse.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
@@ -319,7 +369,6 @@
     handleFile(file);
   });
 
-  // Copy
   btnCopy.addEventListener('click', async () => {
     if (!generatedCode) return;
     try {
@@ -330,20 +379,43 @@
     }
   });
 
-  // Save As
   btnSave.addEventListener('click', () => {
     if (!generatedCode) return;
-    const suggestedName = tCode.value || replaceExt(sourceFileName, 'c');
+    const suggestedName = tCode.value || replaceExt(sourceFileName || 'drawing.c', 'c');
     const blob = new Blob([generatedCode], { type: 'text/plain' });
     const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement('a'), { href: url, download: suggestedName });
+    const a = Object.assign(document.createElement('a'), { href: url, download: suggestedName });
     a.click();
     URL.revokeObjectURL(url);
     tCode.value = suggestedName;
     setStatus(`File "${suggestedName}" downloaded.`, 'ok');
   });
 
-  // ── Core conversion ──────────────────────────────────────────────────────
+  toolDraw.addEventListener('click', () => setTool('draw'));
+  toolErase.addEventListener('click', () => setTool('erase'));
+  btnClearGrid.addEventListener('click', () => {
+    fillGrid(0);
+    setStatus('Drawing cleared.', 'ok');
+  });
+  btnInvertGrid.addEventListener('click', () => {
+    for (let r = 0; r < GRID_H; r++) {
+      for (let c = 0; c < GRID_W; c++) {
+        setGridPixel(r, c, gridPixels[r][c] ? 0 : 1, true);
+      }
+    }
+    setStatus('Drawing inverted.', 'ok');
+  });
+  btnConvertGrid.addEventListener('click', () => {
+    convertDrawing();
+  });
+
+  document.addEventListener('pointerup', () => {
+    isPointerDown = false;
+  });
+
+  initPixelGrid();
+  setTool('draw');
+
   function handleFile(file) {
     setStatus('');
     sourceFileName = file.name;
@@ -354,29 +426,20 @@
     reader.onload = ev => {
       const img = new Image();
       img.onload = () => {
-        // Show preview
         imgPreview.src = ev.target.result;
-        metaSize.textContent   = `${img.width} × ${img.height}`;
+        metaSize.textContent = `${img.width} × ${img.height}`;
         metaPixels.textContent = `${(img.width * img.height).toLocaleString()}`;
-        metaBytes.textContent  = `${(img.width * img.height * 3 * 4).toLocaleString()}`;
+        metaBytes.textContent = `${(img.width * img.height * 3).toLocaleString()}`;
         previewWrap.classList.add('visible');
 
-        // Disable controls during conversion
-        btnBrowse.disabled = true;
-        btnSave.disabled   = true;
-        btnCopy.disabled   = true;
-        progressWrap.classList.add('visible');
-        progressBar.style.width = '0%';
+        disableControlsDuringWork();
 
-        // Render to off-screen canvas
-        const canvas  = document.createElement('canvas');
-        canvas.width  = img.width;
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
-
-        // Use setTimeout-chunked loop to keep UI responsive + animate progress
         convertAsync(imageData, img.width, img.height, file.name);
       };
       img.onerror = () => {
@@ -388,16 +451,43 @@
     reader.readAsDataURL(file);
   }
 
+  function convertDrawing() {
+    const canvas = document.createElement('canvas');
+    canvas.width = GRID_W;
+    canvas.height = GRID_H;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(GRID_W, GRID_H);
+
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        const idx = (row * GRID_W + col) * 4;
+        const on = gridPixels[row][col] === 1;
+        const value = on ? 255 : 0;
+        imageData.data[idx] = value;
+        imageData.data[idx + 1] = value;
+        imageData.data[idx + 2] = value;
+        imageData.data[idx + 3] = 255;
+      }
+    }
+
+    sourceFileName = 'drawing_8x64.png';
+    tImage.value = 'Drawing board (8x64)';
+    tCode.value = 'drawing_8x64.c';
+    imgPreview.src = canvas.toDataURL('image/png');
+    metaSize.textContent = `${GRID_W} × ${GRID_H}`;
+    metaPixels.textContent = `${(GRID_W * GRID_H).toLocaleString()}`;
+    metaBytes.textContent = `${(GRID_W * GRID_H * 3).toLocaleString()}`;
+    previewWrap.classList.add('visible');
+
+    disableControlsDuringWork();
+    convertAsync(imageData, GRID_W, GRID_H, sourceFileName);
+  }
+
   function convertAsync(imageData, W, H, fileName) {
-    const CHUNK = 20; // rows per tick
-    const data = imageData.data; // RGBA array
+    const CHUNK = 20;
+    const data = imageData.data;
     const parts = [];
 
-    // Header (mirrors Java toCode() exactly)
-    parts.push(`/*  C-source image dump of ${fileName}\n`);
-    parts.push(` *  Created using ImageToC.java written by Milton Watts\n`);
-    parts.push(` */\n`);
-    parts.push(` \n`);
     parts.push(`static const struct PROGMEM {\n`);
     parts.push(`  unsigned int width;\n`);
     parts.push(`  unsigned int height;\n`);
@@ -428,19 +518,17 @@
       if (row < H) {
         setTimeout(processChunk, 0);
       } else {
-        finalise(parts);
+        finalise(parts, fileName);
       }
     }
 
     setTimeout(processChunk, 0);
   }
 
-  function finalise(parts) {
-    // Join and strip trailing ", " from last pixel entry (matches Java deleteCharAt)
+  function finalise(parts, fileName) {
     let code = parts.join('');
     code = code.replace(/,\s*$/, '');
     code += '\n};\n';
-    code += `\n/*\n// Copy this function into your code to return the value of a specified pixel\n\nint getPixel(int row, int column, int color) {\n  int index = (row * image.width + column ) * image.bytes_per_pixel;\n  return image.pixels[index + color];\n}\n*/\n`;
 
     generatedCode = code;
     codeOutput.value = code;
@@ -448,12 +536,80 @@
     progressWrap.classList.remove('visible');
     progressBar.style.width = '0%';
     btnBrowse.disabled = false;
-    btnSave.disabled   = false;
-    btnCopy.disabled   = false;
-    setStatus(`Conversion complete — ${generatedCode.length.toLocaleString()} characters.`, 'ok');
+    btnSave.disabled = false;
+    btnCopy.disabled = false;
+    btnConvertGrid.disabled = false;
+    setStatus(`Conversion complete for ${fileName} — ${generatedCode.length.toLocaleString()} characters.`, 'ok');
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  function initPixelGrid() {
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        cell.addEventListener('pointerdown', onCellPointerDown);
+        cell.addEventListener('pointerenter', onCellPointerEnter);
+        pixelGridEl.appendChild(cell);
+      }
+    }
+  }
+
+  function onCellPointerDown(e) {
+    isPointerDown = true;
+    paintCell(e.currentTarget);
+  }
+
+  function onCellPointerEnter(e) {
+    if (!isPointerDown) return;
+    paintCell(e.currentTarget);
+  }
+
+  function paintCell(cell) {
+    const row = Number(cell.dataset.row);
+    const col = Number(cell.dataset.col);
+    const value = drawMode === 'draw' ? 1 : 0;
+    setGridPixel(row, col, value);
+  }
+
+  function setGridPixel(row, col, value, silent = false) {
+    if (gridPixels[row][col] === value) return;
+    gridPixels[row][col] = value;
+    const cellIndex = row * GRID_W + col;
+    const cell = pixelGridEl.children[cellIndex];
+    cell.classList.toggle('on', value === 1);
+    if (!silent) {
+      setStatus(`Pixel ${row},${col} ${value ? 'on' : 'off'}.`, 'ok');
+    }
+  }
+
+  function fillGrid(value) {
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        setGridPixel(row, col, value, true);
+      }
+    }
+  }
+
+  function setTool(mode) {
+    drawMode = mode;
+    toolDraw.classList.toggle('btn-primary', mode === 'draw');
+    toolDraw.classList.toggle('btn-secondary', mode !== 'draw');
+    toolErase.classList.toggle('btn-primary', mode === 'erase');
+    toolErase.classList.toggle('btn-secondary', mode !== 'erase');
+    toolState.textContent = `Mode: ${mode === 'draw' ? 'Draw' : 'Erase'} · 8×64 locked`;
+  }
+
+  function disableControlsDuringWork() {
+    btnBrowse.disabled = true;
+    btnSave.disabled = true;
+    btnCopy.disabled = true;
+    btnConvertGrid.disabled = true;
+    progressWrap.classList.add('visible');
+    progressBar.style.width = '0%';
+  }
+
   function replaceExt(filename, newExt) {
     const dot = filename.lastIndexOf('.');
     if (dot >= 0) return filename.substring(0, dot + 1) + newExt;
@@ -467,6 +623,7 @@
 
   function reset() {
     btnBrowse.disabled = false;
+    btnConvertGrid.disabled = false;
     progressWrap.classList.remove('visible');
   }
 })();
