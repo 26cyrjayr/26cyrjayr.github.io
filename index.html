@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ImageToC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:        #0e0e10;
+    --surface:   #18181c;
+    --border:    #2a2a32;
+    --accent:    #00e5a0;
+    --accent2:   #00b37e;
+    --text:      #d4d4d8;
+    --muted:     #71717a;
+    --err:       #f87171;
+    --radius:    6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 48px;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    max-width: 860px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+  }
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  header span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Main card ── */
+  .card {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Row ── */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .row label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    width: 110px;
+    flex-shrink: 0;
+  }
+
+  /* ── Text inputs ── */
+  input[type="text"] {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]:read-only { color: var(--muted); cursor: default; }
+
+  /* ── Buttons ── */
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    transition: background .15s, opacity .15s, transform .07s;
+    white-space: nowrap;
+  }
+  button:active { transform: scale(.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0e0e10;
+  }
+  .btn-primary:hover { background: #00ffb3; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-secondary:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+
+  /* ── Preview strip ── */
+  #preview-wrap {
+    display: none;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  #preview-wrap.visible { display: flex; }
+  #img-preview {
+    max-width: 96px;
+    max-height: 96px;
+    border-radius: 4px;
+    image-rendering: pixelated;
+    border: 1px solid var(--border);
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .meta span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .meta strong { color: var(--text); font-weight: 500; }
+
+  /* ── Progress ── */
+  #progress-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #progress-wrap.visible { display: flex; }
+  #progress-bar-bg {
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  #progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width .05s linear;
+  }
+  #progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Code output ── */
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .code-header span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  #code-output {
+    width: 100%;
+    min-height: 320px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: #a3e6c8;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+  }
+
+  /* ── Status message ── */
+  #status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    min-height: 18px;
+    color: var(--muted);
+  }
+  #status.ok  { color: var(--accent); }
+  #status.err { color: var(--err); }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); }
+
+  /* ── Hidden file input ── */
+  #file-input { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ImageToC</h1>
+  <span>by Milton Watts — HTML port</span>
+</header>
+
+<div class="card">
+
+  <!-- Source image row -->
+  <div class="row">
+    <label>Source image</label>
+    <input type="text" id="t-image" placeholder="source image file" readonly>
+    <button class="btn-primary" id="btn-browse">Browse</button>
+    <input type="file" id="file-input" accept=".jpg,.jpeg,.gif,.png,.bmp,image/*">
+  </div>
+
+  <!-- Image preview + meta -->
+  <div id="preview-wrap">
+    <img id="img-preview" alt="preview">
+    <div class="meta">
+      <span>Size: <strong id="meta-size">—</strong></span>
+      <span>Pixels: <strong id="meta-pixels">—</strong></span>
+      <span>Output: <strong id="meta-bytes">—</strong> bytes (est.)</span>
+    </div>
+  </div>
+
+  <!-- Conversion progress -->
+  <div id="progress-wrap">
+    <div id="progress-bar-bg"><div id="progress-bar"></div></div>
+    <div id="progress-label">Converting…</div>
+  </div>
+
+  <hr>
+
+  <!-- Code output -->
+  <div>
+    <div class="code-header">
+      <span>Generated C Code</span>
+      <button class="btn-secondary" id="btn-copy" disabled>Copy</button>
+    </div>
+    <textarea id="code-output" spellcheck="false" readonly placeholder="// C source will appear here after selecting an image…"></textarea>
+  </div>
+
+  <hr>
+
+  <!-- Save row -->
+  <div class="row">
+    <label>Output file</label>
+    <input type="text" id="t-code" placeholder="dest code file" readonly>
+    <button class="btn-secondary" id="btn-save" disabled>Save As</button>
+  </div>
+
+  <div id="status"></div>
+
+</div>
+
+<script>
+(() => {
+  const fileInput   = document.getElementById('file-input');
+  const btnBrowse   = document.getElementById('btn-browse');
+  const btnSave     = document.getElementById('btn-save');
+  const btnCopy     = document.getElementById('btn-copy');
+  const tImage      = document.getElementById('t-image');
+  const tCode       = document.getElementById('t-code');
+  const codeOutput  = document.getElementById('code-output');
+  const imgPreview  = document.getElementById('img-preview');
+  const previewWrap = document.getElementById('preview-wrap');
+  const progressWrap  = document.getElementById('progress-wrap');
+  const progressBar   = document.getElementById('progress-bar');
+  const progressLabel = document.getElementById('progress-label');
+  const metaSize    = document.getElementById('meta-size');
+  const metaPixels  = document.getElementById('meta-pixels');
+  const metaBytes   = document.getElementById('meta-bytes');
+  const statusEl    = document.getElementById('status');
+
+  let generatedCode = '';
+  let sourceFileName = '';
+
+  // Wire browse button → hidden file input
+  btnBrowse.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    handleFile(file);
+  });
+
+  // Copy
+  btnCopy.addEventListener('click', async () => {
+    if (!generatedCode) return;
+    try {
+      await navigator.clipboard.writeText(generatedCode);
+      setStatus('Copied to clipboard.', 'ok');
+    } catch {
+      setStatus('Clipboard access denied — select all and copy manually.', 'err');
+    }
+  });
+
+  // Save As
+  btnSave.addEventListener('click', () => {
+    if (!generatedCode) return;
+    const suggestedName = tCode.value || replaceExt(sourceFileName, 'c');
+    const blob = new Blob([generatedCode], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: suggestedName });
+    a.click();
+    URL.revokeObjectURL(url);
+    tCode.value = suggestedName;
+    setStatus(`File "${suggestedName}" downloaded.`, 'ok');
+  });
+
+  // ── Core conversion ──────────────────────────────────────────────────────
+  function handleFile(file) {
+    setStatus('');
+    sourceFileName = file.name;
+    tImage.value = file.name;
+    tCode.value = replaceExt(file.name, 'c');
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        // Show preview
+        imgPreview.src = ev.target.result;
+        metaSize.textContent   = `${img.width} × ${img.height}`;
+        metaPixels.textContent = `${(img.width * img.height).toLocaleString()}`;
+        metaBytes.textContent  = `${(img.width * img.height * 3 * 4).toLocaleString()}`;
+        previewWrap.classList.add('visible');
+
+        // Disable controls during conversion
+        btnBrowse.disabled = true;
+        btnSave.disabled   = true;
+        btnCopy.disabled   = true;
+        progressWrap.classList.add('visible');
+        progressBar.style.width = '0%';
+
+        // Render to off-screen canvas
+        const canvas  = document.createElement('canvas');
+        canvas.width  = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+
+        // Use setTimeout-chunked loop to keep UI responsive + animate progress
+        convertAsync(imageData, img.width, img.height, file.name);
+      };
+      img.onerror = () => {
+        setStatus(`Unable to open file "${file.name}"`, 'err');
+        reset();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function convertAsync(imageData, W, H, fileName) {
+    const CHUNK = 20; // rows per tick
+    const data = imageData.data; // RGBA array
+    const parts = [];
+
+    // Header (mirrors Java toCode() exactly)
+    parts.push(`/*  C-source image dump of ${fileName}\n`);
+    parts.push(` *  Created using ImageToC.java written by Milton Watts\n`);
+    parts.push(` */\n`);
+    parts.push(` \n`);
+    parts.push(`static const struct PROGMEM {\n`);
+    parts.push(`  unsigned int width;\n`);
+    parts.push(`  unsigned int height;\n`);
+    parts.push(`  unsigned int bytes_per_pixel;\n`);
+    parts.push(`  unsigned char pixels[${W} * ${H} * 3];\n`);
+    parts.push(`} image = {${W},${H},3,\n`);
+
+    let row = 0;
+
+    function processChunk() {
+      const end = Math.min(row + CHUNK, H);
+      for (; row < end; row++) {
+        let line = '\n';
+        for (let col = 0; col < W; col++) {
+          const idx = (row * W + col) * 4;
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          line += `${r.toString().padStart(3)},${g.toString().padStart(3)},${b.toString().padStart(3)}, `;
+        }
+        parts.push(line);
+      }
+
+      const pct = Math.round((row / H) * 100);
+      progressBar.style.width = pct + '%';
+      progressLabel.textContent = `Converting… ${pct}% (row ${row} / ${H})`;
+
+      if (row < H) {
+        setTimeout(processChunk, 0);
+      } else {
+        finalise(parts);
+      }
+    }
+
+    setTimeout(processChunk, 0);
+  }
+
+  function finalise(parts) {
+    // Join and strip trailing ", " from last pixel entry (matches Java deleteCharAt)
+    let code = parts.join('');
+    code = code.replace(/,\s*$/, '');
+    code += '\n};\n';
+    code += `\n/*\n// Copy this function into your code to return the value of a specified pixel\n\nint getPixel(int row, int column, int color) {\n  int index = (row * image.width + column ) * image.bytes_per_pixel;\n  return image.pixels[index + color];\n}\n*/\n`;
+
+    generatedCode = code;
+    codeOutput.value = code;
+
+    progressWrap.classList.remove('visible');
+    progressBar.style.width = '0%';
+    btnBrowse.disabled = false;
+    btnSave.disabled   = false;
+    btnCopy.disabled   = false;
+    setStatus(`Conversion complete — ${generatedCode.length.toLocaleString()} characters.`, 'ok');
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function replaceExt(filename, newExt) {
+    const dot = filename.lastIndexOf('.');
+    if (dot >= 0) return filename.substring(0, dot + 1) + newExt;
+    return filename + '.' + newExt;
+  }
+
+  function setStatus(msg, type = '') {
+    statusEl.textContent = msg;
+    statusEl.className = type;
+  }
+
+  function reset() {
+    btnBrowse.disabled = false;
+    progressWrap.classList.remove('visible');
+  }
+})();
+</script>
+</body>
+</html>
