@@ -171,6 +171,29 @@
     gap: 8px;
     align-items: center;
   }
+  .inline-control {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+  }
+  .inline-control input[type="text"] {
+    width: 140px;
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .inline-control select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    outline: none;
+  }
   .tool-chip {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
@@ -293,12 +316,25 @@
     <div class="drawing-toolbar">
       <button class="btn-secondary" id="tool-draw">Draw</button>
       <button class="btn-secondary" id="tool-erase">Erase</button>
+      <button class="btn-secondary" id="tool-fill">Fill</button>
       <button class="btn-secondary" id="btn-clear-grid">Clear</button>
-      <button class="btn-secondary" id="btn-invert-grid">Invert</button>
-      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;">
+      <label class="inline-control">
         Color
         <input type="color" id="draw-color" value="#ed1c24" style="width:30px;height:24px;border:none;background:transparent;padding:0;">
       </label>
+      <label class="inline-control">
+        Text
+        <input type="text" id="text-input" maxlength="28" placeholder="Type text">
+      </label>
+      <label class="inline-control">
+        Size
+        <select id="text-size">
+          <option value="7">Small</option>
+          <option value="9" selected>Medium</option>
+          <option value="11">Large</option>
+        </select>
+      </label>
+      <button class="btn-secondary" id="btn-place-text">Place Text</button>
       <button class="btn-primary" id="btn-convert-grid">Use Drawing (8×64)</button>
       <span class="tool-chip" id="tool-state">Mode: Draw · 8×64 locked</span>
     </div>
@@ -356,18 +392,21 @@
   const pixelGridEl = document.getElementById('pixel-grid');
   const toolDraw = document.getElementById('tool-draw');
   const toolErase = document.getElementById('tool-erase');
+  const toolFill = document.getElementById('tool-fill');
   const toolState = document.getElementById('tool-state');
   const btnClearGrid = document.getElementById('btn-clear-grid');
-  const btnInvertGrid = document.getElementById('btn-invert-grid');
   const btnConvertGrid = document.getElementById('btn-convert-grid');
   const drawColorInput = document.getElementById('draw-color');
+  const textInput = document.getElementById('text-input');
+  const textSize = document.getElementById('text-size');
+  const btnPlaceText = document.getElementById('btn-place-text');
 
   let generatedCode = '';
   let sourceFileName = '';
   let drawMode = 'draw';
   let isPointerDown = false;
   let drawColor = hexToRgb(drawColorInput.value);
-  const gridPixels = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(0));
+  const gridPixels = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(null));
 
   btnBrowse.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => {
@@ -400,24 +439,17 @@
 
   toolDraw.addEventListener('click', () => setTool('draw'));
   toolErase.addEventListener('click', () => setTool('erase'));
+  toolFill.addEventListener('click', () => setTool('fill'));
   btnClearGrid.addEventListener('click', () => {
-    fillGrid(0);
+    fillGrid(null);
     setStatus('Drawing cleared.', 'ok');
-  });
-  btnInvertGrid.addEventListener('click', () => {
-    for (let r = 0; r < GRID_H; r++) {
-      for (let c = 0; c < GRID_W; c++) {
-        setGridPixel(r, c, gridPixels[r][c] ? 0 : 1, true);
-      }
-    }
-    setStatus('Drawing inverted.', 'ok');
   });
   btnConvertGrid.addEventListener('click', () => {
     convertDrawing();
   });
+  btnPlaceText.addEventListener('click', placeText);
   drawColorInput.addEventListener('input', () => {
     drawColor = hexToRgb(drawColorInput.value);
-    document.documentElement.style.setProperty('--pixel-on', drawColorInput.value);
     setStatus(`Drawing color set to ${drawColorInput.value}.`, 'ok');
   });
 
@@ -427,8 +459,6 @@
 
   initPixelGrid();
   setTool('draw');
-  document.documentElement.style.setProperty('--pixel-on', drawColorInput.value);
-
   function handleFile(file) {
     setStatus('');
     sourceFileName = file.name;
@@ -474,10 +504,11 @@
     for (let row = 0; row < GRID_H; row++) {
       for (let col = 0; col < GRID_W; col++) {
         const idx = (row * GRID_W + col) * 4;
-        const on = gridPixels[row][col] === 1;
-        imageData.data[idx] = on ? drawColor.r : 0;
-        imageData.data[idx + 1] = on ? drawColor.g : 0;
-        imageData.data[idx + 2] = on ? drawColor.b : 0;
+        const color = gridPixels[row][col];
+        const rgb = color ? hexToRgb(color) : { r: 0, g: 0, b: 0 };
+        imageData.data[idx] = rgb.r;
+        imageData.data[idx + 1] = rgb.g;
+        imageData.data[idx + 2] = rgb.b;
         imageData.data[idx + 3] = 255;
       }
     }
@@ -568,13 +599,18 @@
 
   function onCellPointerEnter(e) {
     if (!isPointerDown) return;
+    if (drawMode === 'fill') return;
     paintCell(e.currentTarget);
   }
 
   function paintCell(cell) {
     const row = Number(cell.dataset.row);
     const col = Number(cell.dataset.col);
-    const value = drawMode === 'draw' ? 1 : 0;
+    if (drawMode === 'fill') {
+      floodFill(row, col, drawColorInput.value.toLowerCase());
+      return;
+    }
+    const value = drawMode === 'draw' ? drawColorInput.value.toLowerCase() : null;
     setGridPixel(row, col, value);
   }
 
@@ -583,9 +619,10 @@
     gridPixels[row][col] = value;
     const cellIndex = row * GRID_W + col;
     const cell = pixelGridEl.children[cellIndex];
-    cell.classList.toggle('on', value === 1);
+    cell.classList.toggle('on', Boolean(value));
+    cell.style.background = value || 'var(--pixel-off)';
     if (!silent) {
-      setStatus(`Pixel ${row},${col} ${value ? 'on' : 'off'}.`, 'ok');
+      setStatus(`Pixel ${row},${col} ${value ? value : 'cleared'}.`, 'ok');
     }
   }
 
@@ -603,7 +640,10 @@
     toolDraw.classList.toggle('btn-secondary', mode !== 'draw');
     toolErase.classList.toggle('btn-primary', mode === 'erase');
     toolErase.classList.toggle('btn-secondary', mode !== 'erase');
-    toolState.textContent = `Mode: ${mode === 'draw' ? 'Draw' : 'Erase'} · 8×64 locked`;
+    toolFill.classList.toggle('btn-primary', mode === 'fill');
+    toolFill.classList.toggle('btn-secondary', mode !== 'fill');
+    const modeLabel = mode === 'draw' ? 'Draw' : mode === 'erase' ? 'Erase' : 'Fill';
+    toolState.textContent = `Mode: ${modeLabel} · 8×64 locked`;
   }
 
   function disableControlsDuringWork() {
@@ -630,6 +670,59 @@
     btnBrowse.disabled = false;
     btnConvertGrid.disabled = false;
     progressWrap.classList.remove('visible');
+  }
+
+  function placeText() {
+    const text = textInput.value.trim();
+    if (!text) {
+      setStatus('Enter text first.', 'err');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = GRID_W;
+    canvas.height = GRID_H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, GRID_W, GRID_H);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${Number(textSize.value)}px "IBM Plex Mono", monospace`;
+    ctx.fillText(text, GRID_W / 2, GRID_H / 2 + 0.5);
+
+    const textData = ctx.getImageData(0, 0, GRID_W, GRID_H).data;
+    let pixelsPlaced = 0;
+    const placeColor = drawColorInput.value.toLowerCase();
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        const idx = (row * GRID_W + col) * 4;
+        if (textData[idx + 3] > 100) {
+          setGridPixel(row, col, placeColor, true);
+          pixelsPlaced++;
+        }
+      }
+    }
+
+    if (pixelsPlaced === 0) {
+      setStatus('Text did not fit; try shorter text or smaller size.', 'err');
+      return;
+    }
+    setStatus(`Placed "${text}" (${pixelsPlaced} pixels) at size ${textSize.value}.`, 'ok');
+  }
+
+  function floodFill(startRow, startCol, fillColor) {
+    const targetColor = gridPixels[startRow][startCol];
+    if (targetColor === fillColor) return;
+
+    const stack = [[startRow, startCol]];
+    while (stack.length) {
+      const [row, col] = stack.pop();
+      if (row < 0 || row >= GRID_H || col < 0 || col >= GRID_W) continue;
+      if (gridPixels[row][col] !== targetColor) continue;
+      setGridPixel(row, col, fillColor, true);
+      stack.push([row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]);
+    }
+    setStatus(`Filled from ${startRow},${startCol} with ${fillColor}.`, 'ok');
   }
 
   function buildSketchCode(width, height, pixelRows) {
