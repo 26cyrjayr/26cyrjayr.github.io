@@ -672,15 +672,8 @@ LED8 Common Cathode ----------------> Nano pin 7
         metaBytes.textContent = `${(img.width * img.height * 3).toLocaleString()}`;
         previewWrap.classList.add('visible');
 
-        disableControlsDuringWork();
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        convertAsync(imageData, img.width, img.height, file.name);
+        loadImageIntoDrawingGrid(img);
+        setStatus(`Loaded "${file.name}" into the 8×64 drawing grid. Edit as needed, then click Use Drawing (8×64).`, 'ok');
       };
       img.onerror = () => {
         setStatus(`Unable to open file "${file.name}"`, 'err');
@@ -689,6 +682,33 @@ LED8 Common Cathode ----------------> Nano pin 7
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  function loadImageIntoDrawingGrid(img) {
+    fillGrid(null);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = GRID_W;
+    canvas.height = GRID_H;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, GRID_W, GRID_H);
+    ctx.drawImage(img, 0, 0, GRID_W, GRID_H);
+
+    const data = ctx.getImageData(0, 0, GRID_W, GRID_H).data;
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        const idx = (row * GRID_W + col) * 4;
+        const alpha = data[idx + 3];
+        if (alpha < 8) continue;
+
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const hex = rgbToHex(r, g, b);
+        setGridPixel(row, col, hex, true);
+      }
+    }
   }
 
   function convertDrawing() {
@@ -920,6 +940,14 @@ LED8 Common Cathode ----------------> Nano pin 7
       stack.push([row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]);
     }
     setStatus(`Filled from ${startRow},${startCol} with ${fillColor}.`, 'ok');
+  }
+
+  function rgbToHex(r, g, b) {
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+
+  function toHex(value) {
+    return Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0');
   }
 
   function buildSketchCode(width, height, pixelRows) {
