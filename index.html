@@ -380,6 +380,15 @@
       <button class="btn-secondary" id="tool-fill">Fill</button>
       <button class="btn-secondary" id="btn-clear-grid">Clear</button>
       <label class="inline-control">
+        Preset
+        <select id="preset-select">
+          <option value="">Choose preset</option>
+          <option value="presets/rainbow-strip.svg">Rainbow strip</option>
+          <option value="presets/hello-world.svg">HELLO WORLD</option>
+        </select>
+      </label>
+      <button class="btn-secondary" id="btn-load-preset">Load Preset</button>
+      <label class="inline-control">
         Color
         <input type="color" id="draw-color" value="#ed1c24" style="width:30px;height:24px;border:none;background:transparent;padding:0;">
       </label>
@@ -514,6 +523,8 @@
   const toolFill = document.getElementById('tool-fill');
   const toolState = document.getElementById('tool-state');
   const btnClearGrid = document.getElementById('btn-clear-grid');
+  const presetSelect = document.getElementById('preset-select');
+  const btnLoadPreset = document.getElementById('btn-load-preset');
   const btnConvertGrid = document.getElementById('btn-convert-grid');
   const drawColorInput = document.getElementById('draw-color');
   const textInput = document.getElementById('text-input');
@@ -568,6 +579,7 @@
     fillGrid(null);
     setStatus('Drawing cleared.', 'ok');
   });
+  btnLoadPreset.addEventListener('click', loadPresetIntoGrid);
   btnConvertGrid.addEventListener('click', () => {
     convertDrawing();
   });
@@ -609,6 +621,25 @@
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  async function loadPresetIntoGrid() {
+    const presetPath = presetSelect.value;
+    if (!presetPath) {
+      setStatus('Choose a preset first.', 'err');
+      return;
+    }
+
+    try {
+      const res = await fetch(presetPath);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const fileName = presetPath.split('/').pop();
+      const presetFile = new File([blob], fileName, { type: blob.type || 'image/svg+xml' });
+      handleFile(presetFile);
+    } catch (err) {
+      setStatus(`Could not load preset: ${presetPath}`, 'err');
+    }
   }
 
   function loadImageIntoDrawingGrid(img) {
