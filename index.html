@@ -383,8 +383,8 @@
         Preset
         <select id="preset-select">
           <option value="">Choose preset</option>
-          <option value="presets/rainbow-strip.svg">Rainbow strip</option>
-          <option value="presets/hello-world.svg">HELLO WORLD</option>
+          <option value="presets/rainbow-strip.txt">Rainbow</option>
+          <option value="presets/hello-world.txt">Hello World</option>
         </select>
       </label>
       <button class="btn-secondary" id="btn-load-preset">Load Preset</button>
@@ -633,13 +633,60 @@
     try {
       const res = await fetch(presetPath);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
       const fileName = presetPath.split('/').pop();
+      if (presetPath.endsWith('.txt')) {
+        const text = await res.text();
+        loadPresetArrayText(text, fileName);
+        return;
+      }
+
+      const blob = await res.blob();
       const presetFile = new File([blob], fileName, { type: blob.type || 'image/svg+xml' });
       handleFile(presetFile);
     } catch (err) {
       setStatus(`Could not load preset: ${presetPath}`, 'err');
     }
+  }
+
+  function loadPresetArrayText(sourceText, fileName) {
+    const numbers = (sourceText.match(/-?\d+/g) || []).map(Number);
+    if (numbers.length < 3) {
+      setStatus(`Preset "${fileName}" is invalid.`, 'err');
+      return;
+    }
+
+    const [width, height, channels] = numbers;
+    if (width !== GRID_W || height !== GRID_H || channels !== 3) {
+      setStatus(`Preset "${fileName}" must be exactly 64×8×3.`, 'err');
+      return;
+    }
+
+    const expectedValues = GRID_W * GRID_H * 3;
+    const pixelValues = numbers.slice(3);
+    if (pixelValues.length < expectedValues) {
+      setStatus(`Preset "${fileName}" is incomplete (${pixelValues.length}/${expectedValues} values).`, 'err');
+      return;
+    }
+
+    fillGrid(null);
+    let idx = 0;
+    for (let row = 0; row < GRID_H; row++) {
+      for (let col = 0; col < GRID_W; col++) {
+        const r = pixelValues[idx++];
+        const g = pixelValues[idx++];
+        const b = pixelValues[idx++];
+        const hex = rgbToHex(r, g, b);
+        setGridPixel(row, col, hex, true);
+      }
+    }
+
+    const baseName = replaceExt(fileName, '');
+    convertDrawing({
+      sourceName: `${baseName}.png`,
+      imageLabel: `${baseName} preset`,
+      codeName: `${baseName}.c`
+    });
+    setStatus(`Loaded preset "${baseName}".`, 'ok');
   }
 
   function loadImageIntoDrawingGrid(img) {
@@ -669,7 +716,7 @@
     }
   }
 
-  function convertDrawing() {
+  function convertDrawing(opts = {}) {
     const canvas = document.createElement('canvas');
     canvas.width = GRID_W;
     canvas.height = GRID_H;
@@ -688,9 +735,9 @@
       }
     }
 
-    sourceFileName = 'drawing_8x64.png';
-    tImage.value = 'Drawing board (8x64)';
-    tCode.value = 'drawing_8x64.c';
+    sourceFileName = opts.sourceName || 'drawing_8x64.png';
+    tImage.value = opts.imageLabel || 'Drawing board (8x64)';
+    tCode.value = opts.codeName || 'drawing_8x64.c';
     imgPreview.src = canvas.toDataURL('image/png');
     metaSize.textContent = `${GRID_W} × ${GRID_H}`;
     metaPixels.textContent = `${(GRID_W * GRID_H).toLocaleString()}`;
