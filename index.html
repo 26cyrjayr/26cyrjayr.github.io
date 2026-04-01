@@ -395,7 +395,6 @@
         </select>
       </label>
       <button class="btn-secondary" id="btn-place-text">Place Text</button>
-      <button class="btn-primary" id="btn-convert-grid">Use Drawing (8×64)</button>
       <span class="tool-chip" id="tool-state">Mode: Draw · 8×64 locked</span>
     </div>
     <div id="pixel-grid" aria-label="8 by 64 drawing grid"></div>
@@ -411,7 +410,10 @@
   <div>
     <div class="code-header">
       <span>Generated C Code</span>
-      <button class="btn-secondary" id="btn-copy" disabled>Copy</button>
+      <div class="row" style="gap:8px;">
+        <button class="btn-primary" id="btn-convert-grid">Generate Code</button>
+        <button class="btn-secondary" id="btn-copy" disabled>Copy</button>
+      </div>
     </div>
     <textarea id="code-output" spellcheck="false" readonly placeholder="// C source will appear here after selecting an image…"></textarea>
   </div>
@@ -529,7 +531,7 @@ LED8 Common Cathode ----------------> Nano pin 7
         <li>Click <strong>Browse</strong> and load an image, or draw in the 8×64 editor.</li>
         <li>Use Draw/Erase/Fill/Text tools to clean up pixels for better readability while spinning.</li>
         <li>Set pin values to match your real wiring (Red, Green, Blue, Hall, Commons).</li>
-        <li>Click <strong>Use Drawing (8×64)</strong> (for manual art) or process the imported image.</li>
+        <li>Click <strong>Generate Code</strong> after drawing/editing your image in the 8×64 editor.</li>
         <li>Review generated C/Arduino code in the output panel.</li>
         <li>Use <strong>Copy</strong> or <strong>Save As</strong> to export the sketch source.</li>
       </ol>
@@ -673,7 +675,7 @@ LED8 Common Cathode ----------------> Nano pin 7
         previewWrap.classList.add('visible');
 
         loadImageIntoDrawingGrid(img);
-        setStatus(`Loaded "${file.name}" into the 8×64 drawing grid. Edit as needed, then click Use Drawing (8×64).`, 'ok');
+        setStatus(`Loaded "${file.name}" into the 8×64 drawing grid. Edit as needed, then click Generate Code.`, 'ok');
       };
       img.onerror = () => {
         setStatus(`Unable to open file "${file.name}"`, 'err');
