@@ -346,6 +346,178 @@
 
   hr { border: none; border-top: 1px solid var(--border); }
   #file-input { display: none; }
+
+  .viewer3d {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .viewer3d h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    color: var(--accent);
+  }
+  .viewer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+  }
+  .viewer-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .viewer-controls input[type="range"] {
+    width: 140px;
+    accent-color: var(--accent);
+  }
+  .viewer-stage {
+    perspective: 1200px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: radial-gradient(circle at 50% 40%, #17171d, #0c0c10);
+    padding: 20px;
+    overflow: hidden;
+    min-height: 440px;
+    position: relative;
+    cursor: grab;
+  }
+  .viewer-stage.dragging { cursor: grabbing; }
+  .assembly {
+    position: relative;
+    width: 760px;
+    height: 380px;
+    transform-style: preserve-3d;
+    margin: 0 auto;
+    transition: transform .2s ease-out;
+  }
+  .part {
+    position: absolute;
+    transform-style: preserve-3d;
+    transition: transform .25s ease, box-shadow .2s ease, filter .2s ease;
+    cursor: pointer;
+  }
+  .part::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.07);
+    pointer-events: none;
+  }
+  .part:hover,
+  .part.active {
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(0,229,160,.20);
+    filter: brightness(1.08);
+  }
+  .part[data-net="power"] { box-shadow: inset 0 0 0 1px rgba(255,80,80,.25); }
+  .part[data-net="signal"] { box-shadow: inset 0 0 0 1px rgba(255,213,65,.25); }
+  .part[data-net="ground"] { box-shadow: inset 0 0 0 1px rgba(140,180,255,.25); }
+
+  .breadboard-main {
+    left: 20px; top: 70px; width: 450px; height: 220px;
+    background: linear-gradient(165deg, #dcdde1, #c3c5cc);
+    transform: translateZ(14px) rotateY(4deg);
+  }
+  .breadboard-nano {
+    left: 380px; top: 170px; width: 300px; height: 150px;
+    background: linear-gradient(165deg, #d8d9de, #b8bac2);
+    transform: translateZ(10px) rotateY(-5deg);
+  }
+  .battery {
+    left: 500px; top: 20px; width: 190px; height: 130px;
+    background: linear-gradient(90deg, #b5834e 0 36%, #303038 36% 100%);
+    transform: translateZ(24px);
+  }
+  .nano {
+    left: 430px; top: 208px; width: 170px; height: 62px;
+    background: linear-gradient(160deg, #224f9a, #112e5b);
+    transform: translateZ(24px);
+  }
+  .nano::after {
+    content: 'Arduino Nano';
+    position: absolute;
+    color: #d4f2ff;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    left: 12px; top: 24px;
+  }
+  .hall {
+    left: 684px; top: 196px; width: 34px; height: 42px;
+    background: linear-gradient(180deg, #2e2f35, #141418);
+    border-radius: 6px;
+    transform: translateZ(28px);
+  }
+  .hall::after {
+    content: 'N';
+    position: absolute;
+    color: #d8d8df;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    left: 13px; top: 12px;
+  }
+  .resistor-bank {
+    left: 46px; top: 88px; width: 340px; height: 24px;
+    background: repeating-linear-gradient(90deg, #d5be83 0 24px, #d5be83 24px 28px, #d53c3c 28px 31px, #222 31px 34px);
+    border-radius: 5px;
+    transform: translateZ(18px);
+  }
+  .wires {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 760px;
+    height: 380px;
+    pointer-events: none;
+    transform: translateZ(30px);
+  }
+  .wire {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    opacity: .9;
+    transition: stroke-width .18s, filter .18s, opacity .18s;
+    pointer-events: stroke;
+  }
+  .wire:hover,
+  .wire.active {
+    stroke-width: 8;
+    filter: drop-shadow(0 0 6px currentColor);
+    opacity: 1;
+  }
+  .wire.power { stroke: #f54a4a; color:#f54a4a; }
+  .wire.ground { stroke: #84a8ff; color:#84a8ff; }
+  .wire.signal { stroke: #ffd943; color:#ffd943; }
+  .wire.data { stroke: #49da87; color:#49da87; }
+
+  .part-info {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #101015;
+    padding: 10px;
+    min-height: 68px;
+  }
+  .part-info strong {
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .part-info p {
+    color: var(--text);
+    line-height: 1.45;
+    font-size: 12px;
+  }
+
 </style>
 </head>
 <body>
@@ -453,6 +625,38 @@
 
   <hr>
 
+
+
+  <section class="viewer3d" aria-labelledby="viewer-title">
+    <h2 id="viewer-title">Interactive Wiring Layout (3D)</h2>
+    <div class="viewer-controls">
+      <label>Rotate X <input id="rot-x" type="range" min="-35" max="35" value="16"></label>
+      <label>Rotate Y <input id="rot-y" type="range" min="-55" max="55" value="-22"></label>
+      <button class="btn-secondary" id="btn-explode">Explode Parts</button>
+      <span class="hint">Hover to inspect · click to lock highlight · drag to orbit</span>
+    </div>
+    <div class="viewer-stage" id="viewer-stage">
+      <div class="assembly" id="assembly">
+        <div class="part breadboard-main" data-part="main board" data-net="power" data-desc="Primary breadboard with LED + resistor rows and common routing."></div>
+        <div class="part resistor-bank" data-part="resistor bank" data-net="power" data-desc="Current-limiting resistors for each LED string on the main board."></div>
+        <div class="part breadboard-nano" data-part="nano breadboard" data-net="signal" data-desc="Secondary breadboard section that carries the Arduino Nano and sensor wiring."></div>
+        <div class="part nano" data-part="Arduino Nano" data-net="signal" data-desc="Controller position matches the reference diagram: centered on the right breadboard trench."></div>
+        <div class="part hall" data-part="hall-effect sensor" data-net="signal" data-desc="Hall-effect sensor placed at the far-right edge and wired back to Nano signal pin + power/ground."></div>
+        <div class="part battery" data-part="9V battery" data-net="power" data-desc="9V source feeding rails before regulation by the Nano path."></div>
+        <svg class="wires" viewBox="0 0 760 380" aria-label="wire harness">
+          <path class="wire power" data-part="Power rail" data-net="power" data-desc="Battery positive to both boards and Nano VIN rail." d="M 540 105 C 500 120, 460 145, 450 190 C 440 220, 330 216, 170 210" />
+          <path class="wire ground" data-part="Ground rail" data-net="ground" data-desc="Shared ground path between battery, Nano, and both breadboards." d="M 540 119 C 520 178, 450 260, 350 288 C 280 304, 145 300, 58 294" />
+          <path class="wire signal" data-part="Hall signal" data-net="signal" data-desc="Hall sensor OUT routed to Nano interrupt/signal input (Hall pin)." d="M 689 218 C 664 220, 629 231, 603 242 C 584 250, 568 252, 555 250" />
+          <path class="wire data" data-part="LED matrix commons" data-net="data" data-desc="Common LED channels returning from Nano pins to resistor network." d="M 520 274 C 474 312, 396 316, 308 320 C 232 324, 164 322, 82 320" />
+        </svg>
+      </div>
+    </div>
+    <div class="part-info" id="part-info">
+      <strong>Hover a part</strong>
+      <p>Move over a board, wire, Nano, battery, or hall-effect sensor to inspect connection notes.</p>
+    </div>
+  </section>
+
   <section class="guide" aria-labelledby="howto-title">
     <h2 id="howto-title">Complete How-To: Program Workflow and Upload</h2>
     <p>
@@ -523,6 +727,103 @@
   const pinBlueInput = document.getElementById('pin-blue');
   const pinHallInput = document.getElementById('pin-hall');
   const pinsCommonInput = document.getElementById('pins-common');
+
+
+
+  const viewerStage = document.getElementById('viewer-stage');
+  const assembly = document.getElementById('assembly');
+  const rotXInput = document.getElementById('rot-x');
+  const rotYInput = document.getElementById('rot-y');
+  const btnExplode = document.getElementById('btn-explode');
+  const partInfo = document.getElementById('part-info');
+  const inspectables = Array.from(document.querySelectorAll('.part, .wire'));
+  const partsOnly = Array.from(document.querySelectorAll('.part'));
+  let exploded = false;
+  let dragState = null;
+
+  function updateAssemblyTransform() {
+    assembly.style.transform = `rotateX(${rotXInput.value}deg) rotateY(${rotYInput.value}deg)`;
+  }
+
+  function updatePartInfo(name, desc) {
+    partInfo.innerHTML = `<strong>${name}</strong><p>${desc}</p>`;
+  }
+
+  function clearActive() {
+    inspectables.forEach(item => item.classList.remove('active'));
+  }
+
+  function setActiveTarget(target) {
+    clearActive();
+    target.classList.add('active');
+    const net = target.dataset.net;
+    if (net) {
+      inspectables.forEach(item => {
+        if (item.dataset.net === net) item.classList.add('active');
+      });
+    }
+    updatePartInfo(target.dataset.part, target.dataset.desc);
+  }
+
+  inspectables.forEach(item => {
+    item.addEventListener('mouseenter', () => setActiveTarget(item));
+    item.addEventListener('click', () => setActiveTarget(item));
+  });
+
+  viewerStage.addEventListener('mouseleave', () => {
+    clearActive();
+    updatePartInfo('Hover a part', 'Move over a board, wire, Nano, battery, or hall-effect sensor to inspect connection notes.');
+  });
+
+  btnExplode.addEventListener('click', () => {
+    exploded = !exploded;
+    btnExplode.textContent = exploded ? 'Reset Explosion' : 'Explode Parts';
+    partsOnly.forEach(part => {
+      const push = exploded ? 30 : 0;
+      if (part.classList.contains('nano')) {
+        part.style.transform = `translateZ(${24 + push}px) translateX(${exploded ? -12 : 0}px)`;
+      } else if (part.classList.contains('hall')) {
+        part.style.transform = `translateZ(${28 + push}px) translateX(${exploded ? 18 : 0}px)`;
+      } else if (part.classList.contains('battery')) {
+        part.style.transform = `translateZ(${24 + push}px) translateY(${exploded ? -12 : 0}px)`;
+      } else if (part.classList.contains('breadboard-main')) {
+        part.style.transform = `translateZ(${14 + (exploded ? -5 : 0)}px) rotateY(4deg) translateX(${exploded ? -12 : 0}px)`;
+      } else if (part.classList.contains('breadboard-nano')) {
+        part.style.transform = `translateZ(${10 + (exploded ? -6 : 0)}px) rotateY(-5deg) translateX(${exploded ? 10 : 0}px)`;
+      } else if (part.classList.contains('resistor-bank')) {
+        part.style.transform = `translateZ(${18 + push}px)`;
+      }
+    });
+  });
+
+  viewerStage.addEventListener('pointerdown', (event) => {
+    dragState = {
+      x: event.clientX,
+      y: event.clientY,
+      rotX: Number(rotXInput.value),
+      rotY: Number(rotYInput.value)
+    };
+    viewerStage.classList.add('dragging');
+  });
+
+  window.addEventListener('pointerup', () => {
+    dragState = null;
+    viewerStage.classList.remove('dragging');
+  });
+
+  window.addEventListener('pointermove', (event) => {
+    if (!dragState) return;
+    const dx = event.clientX - dragState.x;
+    const dy = event.clientY - dragState.y;
+    rotYInput.value = Math.max(-55, Math.min(55, dragState.rotY + dx * 0.25));
+    rotXInput.value = Math.max(-35, Math.min(35, dragState.rotX - dy * 0.2));
+    updateAssemblyTransform();
+  });
+
+  rotXInput.addEventListener('input', updateAssemblyTransform);
+  rotYInput.addEventListener('input', updateAssemblyTransform);
+  updateAssemblyTransform();
+
 
   let generatedCode = '';
   let sourceFileName = '';
