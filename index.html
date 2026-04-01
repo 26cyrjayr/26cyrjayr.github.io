@@ -828,10 +828,23 @@
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, GRID_W, GRID_H);
     ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.font = `${Number(textSize.value)}px "IBM Plex Mono", monospace`;
-    ctx.fillText(text, GRID_W / 2, GRID_H / 2 + 0.5);
+    ctx.fontKerning = 'none';
+
+    const fontSize = Number(textSize.value);
+    const letterSpacing = 1;
+    const glyphAdvance = Math.max(3, Math.floor(fontSize * 0.68));
+    ctx.font = `700 ${fontSize}px "Courier New", monospace`;
+
+    const totalWidth = (text.length * glyphAdvance) + ((text.length - 1) * letterSpacing);
+    const startX = Math.max(0, Math.floor((GRID_W - totalWidth) / 2));
+    const centerY = GRID_H / 2 + 0.5;
+
+    for (let i = 0; i < text.length; i++) {
+      const x = startX + i * (glyphAdvance + letterSpacing);
+      ctx.fillText(text[i], x, centerY);
+    }
 
     const textData = ctx.getImageData(0, 0, GRID_W, GRID_H).data;
     let pixelsPlaced = 0;
@@ -839,7 +852,7 @@
     for (let row = 0; row < GRID_H; row++) {
       for (let col = 0; col < GRID_W; col++) {
         const idx = (row * GRID_W + col) * 4;
-        if (textData[idx + 3] > 100) {
+        if (textData[idx + 3] > 170) {
           setGridPixel(row, col, placeColor, true);
           pixelsPlaced++;
         }
