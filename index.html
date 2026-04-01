@@ -365,6 +365,29 @@
   </div>
 
   <div id="status"></div>
+
+  <hr>
+
+  <div class="row">
+    <label>Red pin</label>
+    <input type="text" id="pin-red" value="8" placeholder="e.g. 8">
+  </div>
+  <div class="row">
+    <label>Green pin</label>
+    <input type="text" id="pin-green" value="9" placeholder="e.g. 9">
+  </div>
+  <div class="row">
+    <label>Blue pin</label>
+    <input type="text" id="pin-blue" value="10" placeholder="e.g. 10">
+  </div>
+  <div class="row">
+    <label>Hall pin</label>
+    <input type="text" id="pin-hall" value="2" placeholder="e.g. 2 or A0">
+  </div>
+  <div class="row">
+    <label>Commons</label>
+    <input type="text" id="pins-common" value="0, 1, A1, 3, 4, 5, 6, 7" placeholder="Comma-separated list">
+  </div>
 </div>
 
 <script>
@@ -400,6 +423,11 @@
   const textInput = document.getElementById('text-input');
   const textSize = document.getElementById('text-size');
   const btnPlaceText = document.getElementById('btn-place-text');
+  const pinRedInput = document.getElementById('pin-red');
+  const pinGreenInput = document.getElementById('pin-green');
+  const pinBlueInput = document.getElementById('pin-blue');
+  const pinHallInput = document.getElementById('pin-hall');
+  const pinsCommonInput = document.getElementById('pins-common');
 
   let generatedCode = '';
   let sourceFileName = '';
@@ -726,6 +754,8 @@
   }
 
   function buildSketchCode(width, height, pixelRows) {
+    const { redPin, greenPin, bluePin, hallPin, commonPins, numLeds } = getPinConfig();
+
     return `#include <avr/pgmspace.h>
 
 static const struct PROGMEM {
@@ -738,13 +768,13 @@ ${pixelRows}
 };
 
 // ================= PINS =================
-#define RED_PIN    8
-#define GREEN_PIN  9
-#define BLUE_PIN   10
-#define HALL_PIN   2
+#define RED_PIN    ${redPin}
+#define GREEN_PIN  ${greenPin}
+#define BLUE_PIN   ${bluePin}
+#define HALL_PIN   ${hallPin}
 
-#define NUM_LEDS   8
-const int commonPins[NUM_LEDS] = {0, 1, A1, 3, 4, 5, 6, 7};
+#define NUM_LEDS   ${numLeds}
+const int commonPins[NUM_LEDS] = {${commonPins.join(', ')}};
 
 #define TOTAL_COLS ${width}
 #define POV_MIN_RPM 30
@@ -861,6 +891,30 @@ void loop() {
   interrupts();
 }
 `;
+  }
+
+  function getPinConfig() {
+    const redPin = sanitizePin(pinRedInput.value, '8');
+    const greenPin = sanitizePin(pinGreenInput.value, '9');
+    const bluePin = sanitizePin(pinBlueInput.value, '10');
+    const hallPin = sanitizePin(pinHallInput.value, '2');
+    const commonPins = parseCommonPins(pinsCommonInput.value);
+    return { redPin, greenPin, bluePin, hallPin, commonPins, numLeds: commonPins.length };
+  }
+
+  function sanitizePin(value, fallback) {
+    const trimmed = (value || '').trim().toUpperCase();
+    if (!trimmed) return fallback;
+    return /^[A-Z0-9_]+$/.test(trimmed) ? trimmed : fallback;
+  }
+
+  function parseCommonPins(value) {
+    const defaults = ['0', '1', 'A1', '3', '4', '5', '6', '7'];
+    const tokens = (value || '')
+      .split(',')
+      .map(pin => sanitizePin(pin, ''))
+      .filter(Boolean);
+    return tokens.length ? tokens : defaults;
   }
 
   function hexToRgb(hex) {
