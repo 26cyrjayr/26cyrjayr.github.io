@@ -623,6 +623,32 @@
     reader.readAsDataURL(file);
   }
 
+  function getPresetCandidates(presetPath) {
+    const normalized = presetPath.replace(/^\.\//, '');
+    const candidates = [normalized];
+
+    if (!normalized.startsWith('ImageToC/')) {
+      candidates.push(`ImageToC/${normalized}`);
+    }
+
+    return [...new Set(candidates)];
+  }
+
+  async function fetchPreset(presetPath) {
+    const candidates = getPresetCandidates(presetPath);
+
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(candidate);
+        if (res.ok) return { res, path: candidate };
+      } catch (_) {
+        // Continue trying fallback paths.
+      }
+    }
+
+    throw new Error('Preset not found');
+  }
+
   async function loadPresetIntoGrid() {
     const presetPath = presetSelect.value;
     if (!presetPath) {
@@ -631,10 +657,9 @@
     }
 
     try {
-      const res = await fetch(presetPath);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const fileName = presetPath.split('/').pop();
-      if (presetPath.endsWith('.txt')) {
+      const { res, path: resolvedPath } = await fetchPreset(presetPath);
+      const fileName = resolvedPath.split('/').pop();
+      if (resolvedPath.endsWith('.txt')) {
         const text = await res.text();
         loadPresetArrayText(text, fileName);
         return;
