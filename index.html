@@ -422,23 +422,91 @@
   .part[data-net="signal"] { box-shadow: inset 0 0 0 1px rgba(255,213,65,.25); }
   .part[data-net="ground"] { box-shadow: inset 0 0 0 1px rgba(140,180,255,.25); }
 
+  .breadboard-main,
+  .breadboard-nano {
+    background:
+      radial-gradient(circle at 8px 8px, #7d8088 0 2px, transparent 2.4px) 0 0 / 16px 16px,
+      radial-gradient(circle at 8px 8px, #8f939b 0 2px, transparent 2.4px) 8px 8px / 16px 16px,
+      linear-gradient(165deg, #eceef3, #c8ccd5);
+    border-radius: 10px;
+  }
   .breadboard-main {
-    left: 20px; top: 70px; width: 450px; height: 220px;
-    background: linear-gradient(165deg, #dcdde1, #c3c5cc);
+    left: 20px; top: 66px; width: 468px; height: 250px;
     transform: translateZ(14px) rotateY(4deg);
   }
+  .breadboard-main::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 100%;
+    height: 222px;
+    background:
+      linear-gradient(90deg, transparent 46%, rgba(132,135,145,.35) 46% 54%, transparent 54%);
+    border-radius: 8px;
+  }
   .breadboard-nano {
-    left: 380px; top: 170px; width: 300px; height: 150px;
-    background: linear-gradient(165deg, #d8d9de, #b8bac2);
+    left: 394px; top: 188px; width: 318px; height: 165px;
     transform: translateZ(10px) rotateY(-5deg);
   }
+  .breadboard-nano::after {
+    content: 'Arduino Nano Goes Here';
+    position: absolute;
+    left: 88px;
+    top: 66px;
+    color: #617087;
+    background: rgba(246,248,252,.85);
+    border: 1px solid rgba(133,141,156,.5);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+  .rail {
+    position: absolute;
+    height: 6px;
+    border-radius: 4px;
+    transform: translateZ(17px);
+  }
+  .rail.power { background: #f54a4a; box-shadow: 0 0 8px rgba(245,74,74,.35); }
+  .rail.ground { background: #84a8ff; box-shadow: 0 0 8px rgba(132,168,255,.35); }
+  .rail.channel-r { background: #f04949; box-shadow: 0 0 6px rgba(240,73,73,.35); }
+  .rail.channel-g { background: #4bd478; box-shadow: 0 0 6px rgba(75,212,120,.35); }
+  .rail.channel-b { background: #4ea1ff; box-shadow: 0 0 6px rgba(78,161,255,.35); }
   .battery {
-    left: 500px; top: 20px; width: 190px; height: 130px;
+    left: 504px; top: 20px; width: 190px; height: 130px;
     background: linear-gradient(90deg, #b5834e 0 36%, #303038 36% 100%);
     transform: translateZ(24px);
   }
+  .battery::after {
+    content: '9V';
+    position: absolute;
+    right: 58px;
+    top: 36px;
+    color: #f2f2f7;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 42px;
+    font-weight: 600;
+    transform: rotate(90deg);
+  }
+  .switch {
+    left: 468px; top: 160px; width: 44px; height: 18px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #272a31, #12141a);
+    transform: translateZ(24px);
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 2px;
+    width: 18px;
+    height: 14px;
+    background: #5f6878;
+    border-radius: 2px;
+  }
   .nano {
-    left: 430px; top: 208px; width: 170px; height: 62px;
+    left: 460px; top: 247px; width: 170px; height: 62px;
     background: linear-gradient(160deg, #224f9a, #112e5b);
     transform: translateZ(24px);
   }
@@ -451,7 +519,7 @@
     left: 12px; top: 24px;
   }
   .hall {
-    left: 684px; top: 196px; width: 34px; height: 42px;
+    left: 704px; top: 214px; width: 34px; height: 42px;
     background: linear-gradient(180deg, #2e2f35, #141418);
     border-radius: 6px;
     transform: translateZ(28px);
@@ -464,11 +532,44 @@
     font-family: 'IBM Plex Mono', monospace;
     left: 13px; top: 12px;
   }
-  .resistor-bank {
-    left: 46px; top: 88px; width: 340px; height: 24px;
-    background: repeating-linear-gradient(90deg, #d5be83 0 24px, #d5be83 24px 28px, #d53c3c 28px 31px, #222 31px 34px);
-    border-radius: 5px;
-    transform: translateZ(18px);
+  .led {
+    width: 14px;
+    height: 20px;
+    border-radius: 8px 8px 5px 5px;
+    background: linear-gradient(180deg, #f5f6f9, #c0c5cf);
+    transform: translateZ(22px);
+  }
+  .led::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 16px;
+    width: 2px;
+    height: 14px;
+    box-shadow: 5px 0 0 #adb4bf;
+    background: #adb4bf;
+  }
+  .resistor {
+    width: 24px;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #e3c88b, #cfa965);
+    transform: translateZ(20px);
+  }
+  .resistor::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, transparent 0 30%, #c93030 30% 38%, #1f1f20 38% 45%, #d3a012 45% 52%, transparent 52% 100%);
+  }
+  .common-pin {
+    width: 3px;
+    height: 34px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #c2c8d1, #8d949f);
+    transform: translateZ(20px);
   }
   .wires {
     position: absolute;
@@ -482,7 +583,8 @@
   .wire {
     fill: none;
     stroke-width: 5;
-    stroke-linecap: round;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
     opacity: .9;
     transition: stroke-width .18s, filter .18s, opacity .18s;
     pointer-events: stroke;
@@ -638,16 +740,74 @@
     <div class="viewer-stage" id="viewer-stage">
       <div class="assembly" id="assembly">
         <div class="part breadboard-main" data-part="main board" data-net="power" data-desc="Primary breadboard with LED + resistor rows and common routing."></div>
-        <div class="part resistor-bank" data-part="resistor bank" data-net="power" data-desc="Current-limiting resistors for each LED string on the main board."></div>
         <div class="part breadboard-nano" data-part="nano breadboard" data-net="signal" data-desc="Secondary breadboard section that carries the Arduino Nano and sensor wiring."></div>
+        <div class="part rail power" style="left: 30px; top: 79px; width: 436px;" data-part="main power rail +" data-net="power" data-desc="Main breadboard positive rail fed from the battery through the switch."></div>
+        <div class="part rail ground" style="left: 30px; top: 301px; width: 436px;" data-part="main ground rail -" data-net="ground" data-desc="Main breadboard ground rail shared by LED commons and hall sensor return."></div>
+        <div class="part rail channel-r" style="left: 430px; top: 343px; width: 95px;" data-part="red channel rail" data-net="power" data-desc="Red PWM channel rail from Nano to LED anodes through resistor network."></div>
+        <div class="part rail channel-g" style="left: 528px; top: 343px; width: 95px;" data-part="green channel rail" data-net="data" data-desc="Green PWM channel rail tied to Nano output and resistor ladder."></div>
+        <div class="part rail channel-b" style="left: 626px; top: 343px; width: 75px;" data-part="blue channel rail" data-net="signal" data-desc="Blue PWM channel rail tied to Nano output and resistor ladder."></div>
+        <div class="part switch" data-part="power switch" data-net="power" data-desc="Inline switch between battery positive lead and the red rail feed."></div>
         <div class="part nano" data-part="Arduino Nano" data-net="signal" data-desc="Controller position matches the reference diagram: centered on the right breadboard trench."></div>
         <div class="part hall" data-part="hall-effect sensor" data-net="signal" data-desc="Hall-effect sensor placed at the far-right edge and wired back to Nano signal pin + power/ground."></div>
         <div class="part battery" data-part="9V battery" data-net="power" data-desc="9V source feeding rails before regulation by the Nano path."></div>
+        <div class="part led" style="left: 62px; top: 176px;" data-part="LED 1" data-net="data" data-desc="RGB LED node 1 bridging the center channel with current-limited anodes and common cathode pin."></div>
+        <div class="part led" style="left: 112px; top: 176px;" data-part="LED 2" data-net="data" data-desc="RGB LED node 2."></div>
+        <div class="part led" style="left: 162px; top: 176px;" data-part="LED 3" data-net="data" data-desc="RGB LED node 3."></div>
+        <div class="part led" style="left: 212px; top: 176px;" data-part="LED 4" data-net="data" data-desc="RGB LED node 4."></div>
+        <div class="part led" style="left: 262px; top: 176px;" data-part="LED 5" data-net="data" data-desc="RGB LED node 5."></div>
+        <div class="part led" style="left: 312px; top: 176px;" data-part="LED 6" data-net="data" data-desc="RGB LED node 6."></div>
+        <div class="part led" style="left: 362px; top: 176px;" data-part="LED 7" data-net="data" data-desc="RGB LED node 7."></div>
+        <div class="part led" style="left: 412px; top: 176px;" data-part="LED 8" data-net="data" data-desc="RGB LED node 8."></div>
+        <div class="part common-pin" style="left: 66px; top: 208px;" data-part="Common 1" data-net="ground" data-desc="Common return 1 to ground rail."></div>
+        <div class="part common-pin" style="left: 116px; top: 208px;" data-part="Common 2" data-net="ground" data-desc="Common return 2 to ground rail."></div>
+        <div class="part common-pin" style="left: 166px; top: 208px;" data-part="Common 3" data-net="ground" data-desc="Common return 3 to ground rail."></div>
+        <div class="part common-pin" style="left: 216px; top: 208px;" data-part="Common 4" data-net="ground" data-desc="Common return 4 to ground rail."></div>
+        <div class="part common-pin" style="left: 266px; top: 208px;" data-part="Common 5" data-net="ground" data-desc="Common return 5 to ground rail."></div>
+        <div class="part common-pin" style="left: 316px; top: 208px;" data-part="Common 6" data-net="ground" data-desc="Common return 6 to ground rail."></div>
+        <div class="part common-pin" style="left: 366px; top: 208px;" data-part="Common 7" data-net="ground" data-desc="Common return 7 to ground rail."></div>
+        <div class="part common-pin" style="left: 416px; top: 208px;" data-part="Common 8" data-net="ground" data-desc="Common return 8 to ground rail."></div>
+        <div class="part resistor" style="left: 54px; top: 102px;" data-part="R1" data-net="power" data-desc="Current limiting resistor for LED 1 red channel."></div>
+        <div class="part resistor" style="left: 104px; top: 102px;" data-part="R2" data-net="power" data-desc="Current limiting resistor for LED 2 red channel."></div>
+        <div class="part resistor" style="left: 154px; top: 102px;" data-part="R3" data-net="power" data-desc="Current limiting resistor for LED 3 red channel."></div>
+        <div class="part resistor" style="left: 204px; top: 102px;" data-part="R4" data-net="power" data-desc="Current limiting resistor for LED 4 red channel."></div>
+        <div class="part resistor" style="left: 254px; top: 102px;" data-part="R5" data-net="power" data-desc="Current limiting resistor for LED 5 red channel."></div>
+        <div class="part resistor" style="left: 304px; top: 102px;" data-part="R6" data-net="power" data-desc="Current limiting resistor for LED 6 red channel."></div>
+        <div class="part resistor" style="left: 354px; top: 102px;" data-part="R7" data-net="power" data-desc="Current limiting resistor for LED 7 red channel."></div>
+        <div class="part resistor" style="left: 404px; top: 102px;" data-part="R8" data-net="power" data-desc="Current limiting resistor for LED 8 red channel."></div>
+        <div class="part resistor" style="left: 54px; top: 128px;" data-part="R9" data-net="data" data-desc="Current limiting resistor for LED 1 green channel."></div>
+        <div class="part resistor" style="left: 104px; top: 128px;" data-part="R10" data-net="data" data-desc="Current limiting resistor for LED 2 green channel."></div>
+        <div class="part resistor" style="left: 154px; top: 128px;" data-part="R11" data-net="data" data-desc="Current limiting resistor for LED 3 green channel."></div>
+        <div class="part resistor" style="left: 204px; top: 128px;" data-part="R12" data-net="data" data-desc="Current limiting resistor for LED 4 green channel."></div>
+        <div class="part resistor" style="left: 254px; top: 128px;" data-part="R13" data-net="data" data-desc="Current limiting resistor for LED 5 green channel."></div>
+        <div class="part resistor" style="left: 304px; top: 128px;" data-part="R14" data-net="data" data-desc="Current limiting resistor for LED 6 green channel."></div>
+        <div class="part resistor" style="left: 354px; top: 128px;" data-part="R15" data-net="data" data-desc="Current limiting resistor for LED 7 green channel."></div>
+        <div class="part resistor" style="left: 404px; top: 128px;" data-part="R16" data-net="data" data-desc="Current limiting resistor for LED 8 green channel."></div>
+        <div class="part resistor" style="left: 54px; top: 264px;" data-part="R17" data-net="signal" data-desc="Current limiting resistor for LED 1 blue channel."></div>
+        <div class="part resistor" style="left: 104px; top: 264px;" data-part="R18" data-net="signal" data-desc="Current limiting resistor for LED 2 blue channel."></div>
+        <div class="part resistor" style="left: 154px; top: 264px;" data-part="R19" data-net="signal" data-desc="Current limiting resistor for LED 3 blue channel."></div>
+        <div class="part resistor" style="left: 204px; top: 264px;" data-part="R20" data-net="signal" data-desc="Current limiting resistor for LED 4 blue channel."></div>
+        <div class="part resistor" style="left: 254px; top: 264px;" data-part="R21" data-net="signal" data-desc="Current limiting resistor for LED 5 blue channel."></div>
+        <div class="part resistor" style="left: 304px; top: 264px;" data-part="R22" data-net="signal" data-desc="Current limiting resistor for LED 6 blue channel."></div>
+        <div class="part resistor" style="left: 354px; top: 264px;" data-part="R23" data-net="signal" data-desc="Current limiting resistor for LED 7 blue channel."></div>
+        <div class="part resistor" style="left: 404px; top: 264px;" data-part="R24" data-net="signal" data-desc="Current limiting resistor for LED 8 blue channel."></div>
         <svg class="wires" viewBox="0 0 760 380" aria-label="wire harness">
-          <path class="wire power" data-part="Power rail" data-net="power" data-desc="Battery positive to both boards and Nano VIN rail." d="M 540 105 C 500 120, 460 145, 450 190 C 440 220, 330 216, 170 210" />
-          <path class="wire ground" data-part="Ground rail" data-net="ground" data-desc="Shared ground path between battery, Nano, and both breadboards." d="M 540 119 C 520 178, 450 260, 350 288 C 280 304, 145 300, 58 294" />
-          <path class="wire signal" data-part="Hall signal" data-net="signal" data-desc="Hall sensor OUT routed to Nano interrupt/signal input (Hall pin)." d="M 689 218 C 664 220, 629 231, 603 242 C 584 250, 568 252, 555 250" />
-          <path class="wire data" data-part="LED matrix commons" data-net="data" data-desc="Common LED channels returning from Nano pins to resistor network." d="M 520 274 C 474 312, 396 316, 308 320 C 232 324, 164 322, 82 320" />
+          <polyline class="wire power" data-part="Battery + to switch" data-net="power" data-desc="Battery positive routed to the switch before feeding the main + rail." points="585,153 585,168 492,168 492,160" />
+          <polyline class="wire power" data-part="Switch to + rails" data-net="power" data-desc="Switched + rail feeding the left breadboard and nano breadboard upper rail." points="468,169 432,169 432,82 34,82 34,206 398,206" />
+          <polyline class="wire ground" data-part="Battery - to ground rails" data-net="ground" data-desc="Ground return from battery to both breadboard ground rails and Nano GND." points="585,132 585,318 28,318 28,304 398,304 460,304" />
+          <polyline class="wire signal" data-part="Hall signal to Nano" data-net="signal" data-desc="Hall sensor output routed to Nano hall input pin." points="705,236 660,236 660,278 632,278" />
+          <polyline class="wire power" data-part="Hall VCC" data-net="power" data-desc="Hall sensor VCC tied to switched red rail." points="705,225 696,225 696,205 398,205" />
+          <polyline class="wire ground" data-part="Hall ground" data-net="ground" data-desc="Hall sensor ground tied back to shared ground rail." points="705,246 696,246 696,305 398,305" />
+          <polyline class="wire power" data-part="Red channel bus" data-net="power" data-desc="Nano PWM red output to red channel rail and resistor chain." points="520,308 520,344 430,344" />
+          <polyline class="wire data" data-part="Green channel bus" data-net="data" data-desc="Nano PWM green output to green channel rail and resistor chain." points="552,308 552,344 528,344" />
+          <polyline class="wire signal" data-part="Blue channel bus" data-net="signal" data-desc="Nano PWM blue output to blue channel rail and resistor chain." points="584,308 584,344 626,344" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="66,242 66,332 480,332 480,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="116,242 116,336 500,336 500,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="166,242 166,340 520,340 520,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="216,242 216,344 540,344 540,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="266,242 266,348 560,348 560,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="316,242 316,352 580,352 580,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="366,242 366,356 600,356 600,315" />
+          <polyline class="wire data" data-part="Common fanout harness" data-net="data" data-desc="Eight common returns routed from main board back toward Nano common pins." points="416,242 416,360 620,360 620,315" />
         </svg>
       </div>
     </div>
