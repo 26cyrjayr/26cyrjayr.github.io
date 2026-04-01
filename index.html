@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Account Hub</title>
+    <title>My Homepage</title>
     <style>
       :root {
-        color-scheme: light;
-        --bg: #f6f7fb;
-        --card: #ffffff;
-        --text: #1f2937;
-        --muted: #6b7280;
-        --accent: #2563eb;
-        --accent-soft: #dbeafe;
+        --bg: #0f172a;
+        --panel: #111827;
+        --card: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-soft: #082f49;
       }
 
       * {
@@ -23,125 +23,268 @@
         margin: 0;
         font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
           sans-serif;
-        background: linear-gradient(180deg, #eef2ff 0%, var(--bg) 30%);
+        background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 55%);
         color: var(--text);
       }
 
       .container {
-        max-width: 900px;
+        max-width: 980px;
         margin: 0 auto;
-        padding: 2.5rem 1rem 4rem;
+        padding: 2rem 1rem 3rem;
       }
 
-      .hero {
-        background: var(--card);
-        border: 1px solid #e5e7eb;
-        border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 6px 24px rgba(17, 24, 39, 0.07);
-      }
-
-      .hero h1 {
-        margin: 0 0 0.75rem;
-        font-size: clamp(1.7rem, 4vw, 2.2rem);
-      }
-
-      .hero p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 1.02rem;
-      }
-
-      .grid {
+      .layout {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1rem;
-        margin-top: 1.25rem;
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 1.2rem;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(1.7rem, 4vw, 2.3rem);
+      }
+
+      .subtitle {
+        color: var(--muted);
+        margin-top: 0.5rem;
+      }
+
+      .cards {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 0.8rem;
       }
 
       .card {
         background: var(--card);
-        border: 1px solid #e5e7eb;
-        border-radius: 0.9rem;
-        padding: 1rem 1rem 1.1rem;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 0.8rem;
       }
 
-      .card h2 {
-        margin: 0;
-        font-size: 1.05rem;
+      .card a {
+        color: #7dd3fc;
       }
 
-      .card p {
-        margin: 0.5rem 0 0;
+      .form-row {
+        display: grid;
+        gap: 0.35rem;
+        margin-bottom: 0.7rem;
+      }
+
+      label {
         color: var(--muted);
-        line-height: 1.5;
+        font-size: 0.85rem;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid #475569;
+        background: #0b1220;
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.6rem;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 84px;
+        resize: vertical;
       }
 
       .actions {
-        margin-top: 1.5rem;
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
       }
 
-      .button {
-        display: inline-block;
+      button {
+        border: 0;
         border-radius: 999px;
-        padding: 0.65rem 1rem;
-        text-decoration: none;
+        padding: 0.55rem 0.9rem;
         font-weight: 600;
+        cursor: pointer;
       }
 
-      .button.primary {
+      .primary {
         background: var(--accent);
-        color: #fff;
+        color: #082f49;
       }
 
-      .button.secondary {
+      .secondary {
         background: var(--accent-soft);
-        color: #1e40af;
+        color: #7dd3fc;
       }
 
-      footer {
-        margin-top: 2rem;
-        color: var(--muted);
+      .status {
+        margin-top: 0.6rem;
+        color: #67e8f9;
         font-size: 0.9rem;
+      }
+
+      @media (max-width: 840px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
     <main class="container">
-      <section class="hero">
-        <h1>Welcome to My Account</h1>
-        <p>
-          This is your starter index page. Use this space to share your profile, important links,
-          and quick updates about your account.
-        </p>
+      <div class="layout">
+        <section class="panel">
+          <h1 id="hero-name">Your Name</h1>
+          <p class="subtitle" id="hero-tagline">Builder • Learner • Creator</p>
 
-        <div class="grid">
-          <article class="card">
-            <h2>Profile Snapshot</h2>
-            <p>Add a short intro, your username, and what this account is for.</p>
-          </article>
-          <article class="card">
-            <h2>Important Links</h2>
-            <p>Place your portfolio, social links, docs, or favorite resources here.</p>
-          </article>
-          <article class="card">
-            <h2>Current Focus</h2>
-            <p>Share what you're building or learning right now so visitors know what's new.</p>
-          </article>
-        </div>
+          <div class="cards">
+            <article class="card">
+              <h2>About Me</h2>
+              <p id="hero-bio">Write a short bio in the editor panel to personalize this homepage.</p>
+            </article>
+            <article class="card">
+              <h2>Projects</h2>
+              <p>
+                <a id="hero-project-url" href="https://github.com" target="_blank" rel="noopener">Project Link</a>
+              </p>
+            </article>
+            <article class="card">
+              <h2>Contact</h2>
+              <p>
+                <a id="hero-contact-url" href="mailto:you@example.com">you@example.com</a>
+              </p>
+            </article>
+          </div>
+        </section>
 
-        <div class="actions">
-          <a class="button primary" href="#">Edit My Profile</a>
-          <a class="button secondary" href="#">View Activity</a>
-        </div>
-      </section>
+        <aside class="panel">
+          <h2>Edit Homepage</h2>
+          <p class="subtitle">Input your details and click Save. Output updates instantly and persists in your browser.</p>
 
-      <footer>
-        Starter page created for your account index.
-      </footer>
+          <div class="form-row">
+            <label for="name">Name</label>
+            <input id="name" type="text" placeholder="Your name" />
+          </div>
+          <div class="form-row">
+            <label for="tagline">Tagline</label>
+            <input id="tagline" type="text" placeholder="e.g., Full-stack developer" />
+          </div>
+          <div class="form-row">
+            <label for="bio">Bio</label>
+            <textarea id="bio" placeholder="Tell visitors who you are and what you do."></textarea>
+          </div>
+          <div class="form-row">
+            <label for="projectUrl">Project URL</label>
+            <input id="projectUrl" type="text" placeholder="https://..." />
+          </div>
+          <div class="form-row">
+            <label for="contact">Contact (email or URL)</label>
+            <input id="contact" type="text" placeholder="you@example.com or https://..." />
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="saveBtn">Save</button>
+            <button class="secondary" id="resetBtn" type="button">Reset</button>
+          </div>
+          <div class="status" id="status"></div>
+        </aside>
+      </div>
     </main>
+
+    <script>
+      const STORAGE_KEY = "personal-homepage-data";
+
+      const defaults = {
+        name: "Your Name",
+        tagline: "Builder • Learner • Creator",
+        bio: "Write a short bio in the editor panel to personalize this homepage.",
+        projectUrl: "https://github.com",
+        contact: "you@example.com"
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      function normalizeContact(value) {
+        if (!value) return defaults.contact;
+        if (value.includes("@") && !value.startsWith("http")) return `mailto:${value}`;
+        return value;
+      }
+
+      function applyData(data) {
+        $("hero-name").textContent = data.name || defaults.name;
+        $("hero-tagline").textContent = data.tagline || defaults.tagline;
+        $("hero-bio").textContent = data.bio || defaults.bio;
+
+        const project = data.projectUrl || defaults.projectUrl;
+        $("hero-project-url").href = project;
+        $("hero-project-url").textContent = project;
+
+        const contactValue = data.contact || defaults.contact;
+        $("hero-contact-url").href = normalizeContact(contactValue);
+        $("hero-contact-url").textContent = contactValue;
+
+        $("name").value = data.name || "";
+        $("tagline").value = data.tagline || "";
+        $("bio").value = data.bio || "";
+        $("projectUrl").value = data.projectUrl || "";
+        $("contact").value = data.contact || "";
+      }
+
+      function readForm() {
+        return {
+          name: $("name").value.trim(),
+          tagline: $("tagline").value.trim(),
+          bio: $("bio").value.trim(),
+          projectUrl: $("projectUrl").value.trim(),
+          contact: $("contact").value.trim()
+        };
+      }
+
+      function setStatus(message) {
+        $("status").textContent = message;
+        if (message) {
+          setTimeout(() => {
+            $("status").textContent = "";
+          }, 2200);
+        }
+      }
+
+      function loadSaved() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch {
+          return {};
+        }
+      }
+
+      const initial = { ...defaults, ...loadSaved() };
+      applyData(initial);
+
+      $("saveBtn").addEventListener("click", () => {
+        const data = readForm();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        applyData({ ...defaults, ...data });
+        setStatus("Saved. Your homepage content is updated.");
+      });
+
+      $("resetBtn").addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        applyData(defaults);
+        setStatus("Reset to defaults.");
+      });
+    </script>
   </body>
 </html>
