@@ -1,1 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Account Hub</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+      }
 
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+          sans-serif;
+        background: linear-gradient(180deg, #eef2ff 0%, var(--bg) 30%);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2.5rem 1rem 4rem;
+      }
+
+      .hero {
+        background: var(--card);
+        border: 1px solid #e5e7eb;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 6px 24px rgba(17, 24, 39, 0.07);
+      }
+
+      .hero h1 {
+        margin: 0 0 0.75rem;
+        font-size: clamp(1.7rem, 4vw, 2.2rem);
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.02rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.25rem;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid #e5e7eb;
+        border-radius: 0.9rem;
+        padding: 1rem 1rem 1.1rem;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .card p {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .actions {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .button {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.65rem 1rem;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .button.primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .button.secondary {
+        background: var(--accent-soft);
+        color: #1e40af;
+      }
+
+      footer {
+        margin-top: 2rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="hero">
+        <h1>Welcome to My Account</h1>
+        <p>
+          This is your starter index page. Use this space to share your profile, important links,
+          and quick updates about your account.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <h2>Profile Snapshot</h2>
+            <p>Add a short intro, your username, and what this account is for.</p>
+          </article>
+          <article class="card">
+            <h2>Important Links</h2>
+            <p>Place your portfolio, social links, docs, or favorite resources here.</p>
+          </article>
+          <article class="card">
+            <h2>Current Focus</h2>
+            <p>Share what you're building or learning right now so visitors know what's new.</p>
+          </article>
+        </div>
+
+        <div class="actions">
+          <a class="button primary" href="#">Edit My Profile</a>
+          <a class="button secondary" href="#">View Activity</a>
+        </div>
+      </section>
+
+      <footer>
+        Starter page created for your account index.
+      </footer>
+    </main>
+  </body>
+</html>
