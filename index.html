@@ -284,6 +284,66 @@
   #status.ok  { color: var(--accent); }
   #status.err { color: var(--err); }
 
+  .guide {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .guide h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    color: var(--accent);
+  }
+  .guide h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .guide p, .guide li {
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .guide ul, .guide ol {
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .guide-panel {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    background: #101015;
+  }
+  .diagram {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #a3e6c8;
+    background: #0b0b0f;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
   hr { border: none; border-top: 1px solid var(--border); }
   #file-input { display: none; }
 </style>
@@ -388,6 +448,115 @@
     <label>Commons</label>
     <input type="text" id="pins-common" value="0, 1, A1, 3, 4, 5, 6, 7" placeholder="Comma-separated list">
   </div>
+
+  <hr>
+
+  <section class="guide" aria-labelledby="howto-title">
+    <h2 id="howto-title">Complete How-To: Wiring, Program Workflow, and Upload</h2>
+    <p>
+      This section is integrated directly into the site so you can build without switching to another document.
+      Follow the steps in order: <strong>wire hardware</strong> → <strong>generate code</strong> → <strong>upload sketch</strong>.
+    </p>
+
+    <div class="guide-grid">
+      <div class="guide-panel">
+        <h3>Default Pin Map (Nano V3)</h3>
+        <ul>
+          <li>Red channel bus: <strong>D8</strong></li>
+          <li>Green channel bus: <strong>D9</strong></li>
+          <li>Blue channel bus: <strong>D10</strong></li>
+          <li>Hall sensor input: <strong>D2</strong> (interrupt)</li>
+          <li>LED commons: <strong>0, 1, A1, 3, 4, 5, 6, 7</strong></li>
+        </ul>
+      </div>
+      <div class="guide-panel">
+        <h3>Parts Checklist</h3>
+        <ul>
+          <li>Arduino Nano V3 + USB cable</li>
+          <li>8 × common-cathode RGB LEDs</li>
+          <li>Current-limiting resistors for RGB buses</li>
+          <li>Hall-effect sensor + small magnet</li>
+          <li>Breadboards / wiring / stable power source</li>
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <h3>1) Wiring Instructions (Detailed)</h3>
+      <ol>
+        <li>Connect Nano <strong>5V</strong> and <strong>GND</strong> to your breadboard rails.</li>
+        <li>Connect all grounds together: Nano ground, sensor ground, LED ground return, and supply ground.</li>
+        <li>Create three shared color buses (R, G, B). Drive them from D8/D9/D10 through resistors.</li>
+        <li>For each RGB LED, connect R/G/B legs to the shared buses.</li>
+        <li>Connect each LED <strong>common cathode</strong> to one unique common-select pin from the Commons list.</li>
+        <li>Wire Hall sensor: VCC→5V, GND→GND, OUT→D2. Place magnet so the sensor receives one clean pulse per revolution.</li>
+        <li>Before power-up, verify LED lead order from your LED datasheet image (common cathode package).</li>
+      </ol>
+      <p class="hint">Important: If you change any physical pin, update the pin fields above and regenerate code before uploading.</p>
+    </div>
+
+    <div>
+      <h3>Wiring Diagram (Logical)</h3>
+      <div class="diagram" role="img" aria-label="logical POV wiring diagram">
+Nano 5V  -------------------> +5V rail ---------------------> Hall VCC
+Nano GND -------------------> GND rail ---------------------> Hall GND
+                                                       \
+                                                        +--> LED return reference
+
+Nano D8  --[R]--> RED BUS  ----+---- LED1 R
+Nano D9  --[R]--> GREEN BUS ---+---- LED1 G
+Nano D10 --[R]--> BLUE BUS  ---+---- LED1 B
+                               +---- LED2 RGB
+                               +---- ...
+                               +---- LED8 RGB
+
+Nano D2  <--------------------------- Hall OUT (1 pulse/rev)
+
+LED1 Common Cathode ----------------> Nano pin 0
+LED2 Common Cathode ----------------> Nano pin 1
+LED3 Common Cathode ----------------> Nano pin A1
+LED4 Common Cathode ----------------> Nano pin 3
+LED5 Common Cathode ----------------> Nano pin 4
+LED6 Common Cathode ----------------> Nano pin 5
+LED7 Common Cathode ----------------> Nano pin 6
+LED8 Common Cathode ----------------> Nano pin 7
+      </div>
+    </div>
+
+    <div>
+      <h3>2) Using This Program</h3>
+      <ol>
+        <li>Click <strong>Browse</strong> and load an image, or draw in the 8×64 editor.</li>
+        <li>Use Draw/Erase/Fill/Text tools to clean up pixels for better readability while spinning.</li>
+        <li>Set pin values to match your real wiring (Red, Green, Blue, Hall, Commons).</li>
+        <li>Click <strong>Use Drawing (8×64)</strong> (for manual art) or process the imported image.</li>
+        <li>Review generated C/Arduino code in the output panel.</li>
+        <li>Use <strong>Copy</strong> or <strong>Save As</strong> to export the sketch source.</li>
+      </ol>
+    </div>
+
+    <div>
+      <h3>3) Upload to Arduino Nano</h3>
+      <ol>
+        <li>Open Arduino IDE and paste or open the generated sketch.</li>
+        <li>Select <strong>Tools → Board → Arduino Nano</strong>.</li>
+        <li>Select correct <strong>Tools → Processor</strong> option for your Nano bootloader.</li>
+        <li>Select the Nano serial port in <strong>Tools → Port</strong>.</li>
+        <li>Click <strong>Verify</strong> then <strong>Upload</strong>.</li>
+        <li>Spin assembly and adjust Hall sensor/magnet gap until timing is stable.</li>
+      </ol>
+    </div>
+
+    <div>
+      <h3>Troubleshooting</h3>
+      <ul>
+        <li><strong>No image:</strong> Hall sensor not triggering; check D2 wiring and magnet alignment.</li>
+        <li><strong>Wrong colors:</strong> RGB leads swapped; verify LED lead orientation and bus wiring.</li>
+        <li><strong>Missing rows:</strong> one or more common pins mismatched between wiring and Commons field.</li>
+        <li><strong>Flicker/jitter:</strong> unstable power, bad grounds, or noisy Hall signal routing.</li>
+      </ul>
+    </div>
+  </section>
 </div>
 
 <script>
